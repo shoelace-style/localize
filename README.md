@@ -86,7 +86,7 @@ _Exception: The mutation observer will not track `lang` changes within shadow ro
 
 1. Create one or more translations
 2. Register the translations
-3. Use translation functions to localize components
+3. Localize your components
 
 ### Creating Translations
 
@@ -151,9 +151,7 @@ async function changeLanguage(lang) {
 }
 ```
 
-### Translation Functions
-
-#### Lit
+### Lit
 
 If you're using [Lit](https://lit.dev/) to develop components, you won't need the aforementioned translation functions at all. Instead, you can import the `@localize` directive and the corresponding translation functions.
 
@@ -183,11 +181,11 @@ export class MyElement extends LitElement {
 }
 ```
 
-#### FAST
+### FAST
 
 Directives are coming soon for [FAST Element](https://www.fast.design/).
 
-#### No Library (Advanced)
+### No Library (Advanced)
 
 To use this without a custom element library, you'll need to follow this pattern.
 
