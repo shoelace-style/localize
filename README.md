@@ -57,7 +57,7 @@ Typically, custom element authors dance around the problem by exposing attribute
 
 But this approach offloads the problem to the user so they have to provide every term every time. It also doesn't scale with more complex components that have more than a couple terms to be translated.
 
-This is the use case this library is solving for. It is by no means intended to solve localization at the framework level. There are much better tools for localizing your app at the framework level.
+This is the use case this library is solving for. It is by no means intended to solve localization at the framework level. There are much better tools for that.
 
 ## How it works
 
