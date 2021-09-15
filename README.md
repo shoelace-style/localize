@@ -2,7 +2,40 @@
 
 This micro library does not aim to replicate a full-blown localization tool. For that, you should use something like [i18next](https://www.i18next.com/). What this library _does_ do is provide a lightweight, framework-agnostic mechanism for sharing and applying translations across one or more custom elements in a component library.
 
-Included are methods for translating terms, dates, currencies, and numbers, as well as corresponding directives for Lit Element.
+Included are methods for translating terms, dates, currencies, and numbers, as well as corresponding directives for Lit and FAST.
+
+## Overview
+
+Here's an example of how this library can be used to create a custom element with Lit.
+
+
+```ts
+import { litLocalize as localize, litTranslate as t, registerTranslation } from '@shoelace-style/localize';
+import en from '../translations/en.ts';
+import es from '../translations/es.ts';
+
+registerTranslation(en, es); // Can also be done outside of the component or on demand
+
+@customElement('my-element')
+@localize()
+export class MyElement extends LitElement {
+  render() {
+    return html`
+      <h1>${t('hello_user', 'world')}</h1>
+    `;
+  }
+}
+```
+
+Here's how your consumers will change languages.
+
+```html
+<html lang="es">
+  ...
+</html>
+```
+
+Simply changing the `lang` attribute on any element in the DOM will trigger an update to all localized components.
 
 ## Why this instead of an i18n library?
 
