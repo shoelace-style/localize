@@ -21,7 +21,7 @@ registerTranslation(en, es); // Can also be done outside of the component or on 
 export class MyElement extends LitElement {
   render() {
     return html`
-      <h1>${t('hello_user', 'world')}</h1>
+      <h1>${t('hello_user', 'world')}</h1>  <!-- outputs "Hello, world!" -->
     `;
   }
 }
