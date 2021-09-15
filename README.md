@@ -84,6 +84,14 @@ _Exception: The mutation observer will not track `lang` changes within shadow ro
 
 ## Usage
 
+First, install the library.
+
+```bash
+npm install @shoelace-style/localize
+```
+
+Next, follow these steps to localize your components.
+
 1. Create one or more translations
 2. Register the translations
 3. Localize your components
