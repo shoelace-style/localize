@@ -1,7 +1,7 @@
 import { Directive, directive, Part } from 'lit/directive.js';
-import { connectedElements, detectLanguage, formatDate, formatNumber, translate } from '../localize';
+import { connectedElements, detectLanguage, formatDate, formatNumber, translate } from './';
 
-import type { FunctionParams, Translation } from '../localize';
+import type { FunctionParams, Translation } from './';
 import type { LitElement } from 'lit';
 
 /**
@@ -10,7 +10,7 @@ import type { LitElement } from 'lit';
  * This class decorator ensures lang is a reactive property and adds and removes the component to and from the
  * connectedElements set.
  */
-export function localize() {
+export function litLocalize() {
   return (targetClass: any): typeof targetClass => {
     return class extends targetClass {
       static get properties() {
@@ -57,7 +57,7 @@ class TranslateDirective extends Directive {
 
 const litDirective = directive(TranslateDirective);
 
-export function translateDirective<T extends keyof Translation>(key: T, ...args: FunctionParams<Translation[T]>) {
+export function litTranslate<T extends keyof Translation>(key: T, ...args: FunctionParams<Translation[T]>) {
   return litDirective(key, ...args);
 }
 
@@ -80,7 +80,7 @@ class FormatDateDirective extends Directive {
   }
 }
 
-export const formatDateDirective = directive(FormatDateDirective);
+export const litFormatDate = directive(FormatDateDirective);
 
 /**
  * Lit format number directive
@@ -101,4 +101,4 @@ class FormatNumberDirective extends Directive {
   }
 }
 
-export const formatNumberDirective = directive(FormatNumberDirective);
+export const litFormatNumber = directive(FormatNumberDirective);

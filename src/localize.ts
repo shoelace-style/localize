@@ -13,6 +13,7 @@ export interface Translation {
 export const connectedElements = new Map<HTMLElement, string>();
 const documentElementObserver = new MutationObserver(() => forceUpdate());
 const translations: Map<string, Translation> = new Map();
+let fallback: Translation;
 
 function closest(selector: string, root: Element = this) {
   function getNext(el: Element | HTMLElement, next = el && el.closest(selector)): Element | null {
@@ -31,9 +32,16 @@ export function detectLanguage(el: HTMLElement) {
   return closestEl?.lang;
 }
 
-export function registerTranslation(translation: Translation) {
-  const code = translation.$code.toLowerCase();
-  translations.set(code, translation);
+export function registerTranslation(...translation: Translation[]) {
+  translation.map(t => {
+    const code = t.$code.toLowerCase();
+    translations.set(code, t);
+
+    // Use the first translation that's registered as the fallback
+    if (!fallback) {
+      fallback = t;
+    }
+  });
 }
 
 export function translate<K extends keyof Translation>(lang: string, key: K, ...args: FunctionParams<Translation[K]>) {
@@ -41,7 +49,6 @@ export function translate<K extends keyof Translation>(lang: string, key: K, ...
   const subcode = lang.length > 2 ? lang.toLowerCase() : ''; // e.g. en-US
   const primary = translations.get(subcode);
   const secondary = translations.get(code);
-  const fallback = translations.get('en')!;
   let term;
 
   // Look for a matching term using subcode, code, then the fallback
