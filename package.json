@@ -1,0 +1,39 @@
+{
+  "name": "@shoelace-style/localize",
+  "version": "1.0.0",
+  "description": "A micro library for localizing custom elements.",
+  "main": "/dist/index.js",
+  "module": "dist/index.js",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "start": "tsc -w",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shoelace-style/localize.git"
+  },
+  "keywords": [
+    "shoelace",
+    "web components",
+    "custom elements",
+    "localization",
+    "internationalization",
+    "i18n",
+    "l10n"
+  ],
+  "author": "Cory LaViska",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shoelace-style/localize/issues"
+  },
+  "homepage": "https://github.com/shoelace-style/localize#readme",
+  "devDependencies": {
+    "typescript": "^4.4.3"
+  },
+  "dependencies": {
+    "lit": "*"
+  }
+}
