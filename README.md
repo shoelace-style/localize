@@ -39,7 +39,7 @@ Simply changing the `lang` attribute on any element in the DOM will trigger an u
 
 ## Why this instead of an i18n library?
 
-It's not uncommon for a custom element to require localization, but implementing it at the platform level is challenging. For example, how should we provide a translation for this close button that exists in a custom element's shadow root?
+It's not uncommon for a custom element to require localization, but implementing it at the component level is challenging. For example, how should we provide a translation for this close button that exists in a custom element's shadow root?
 
 ```html
 <button type="button" aria-label="Close">
@@ -142,7 +142,7 @@ The first translation to be registered will be used as the "fallback". That is, 
 
 Translations registered with subcodes such as `en-GB` are supported. However, your fallback translation must be registered with a base code (e.g. `en`) to ensure users of unsupported regions will still receive a comprehensible translation.
 
-For example, if you're primary language is `en-US` you should register it as `en` so users with all `en-*` subcodes will receive it as a fallback. Then you can register additional subcodes such as `en-GB` and `en-AU` to improve the experience for additional regions.
+For example, if you're primary language is `en-US`, you should register it as `en` so users with unsupported `en-*` subcodes will receive it as a fallback. Then you can register subcodes such as `en-GB` and `en-AU` to improve the experience for those additional regions.
 
 It's important to note that translations _do not_ have to be registered up front. You can register them on demand as the language changes in your app. Upon import, all localized components will update automatically.
 
@@ -161,14 +161,14 @@ async function changeLanguage(lang) {
 
 ### Lit
 
-If you're using [Lit](https://lit.dev/) to develop components, you won't need the aforementioned translation functions at all. Instead, you can import the `@localize` directive and the corresponding translation functions.
+If you're using [Lit](https://lit.dev/) to develop components, import the `@localize` directive and the corresponding translation function(s).
 
 ```ts
 import { 
   litLocalize as localize, 
   litTranslate as t, 
-  litFormatDate as td, 
-  litFormatNumber as tn 
+  litFormatDate as d, 
+  litFormatNumber as n 
 } from '@shoelace-style/localize';
 
 @customElement('my-element')
@@ -180,10 +180,10 @@ export class MyElement extends LitElement {
       ${t('hello')}
 
       <!-- Date -->
-      ${td('2021-09-15 14:00:00 ET'), { month: 'long', day: 'numeric', year: 'numeric' }}
+      ${d('2021-09-15 14:00:00 ET'), { month: 'long', day: 'numeric', year: 'numeric' }}
 
       <!-- Currency -->
-      ${tn(1000, { style: 'currency', currency: 'USD'})}
+      ${n(1000, { style: 'currency', currency: 'USD'})}
     `;
   }
 }
@@ -281,7 +281,7 @@ Occassionaly, third-party components may want to make use of your localization l
 import en from './en';
 
 en.logout = 'Logout';
-en.goodbye_user = (name: string) => `Goodbye, ${user}`;
+en.goodbye_user = (name: string) => `Goodbye, ${name}`;
 ```
 
 ## Advantages
