@@ -268,12 +268,12 @@ export interface Translation extends BaseTranslation {
 
 // Wrap the translate function
 export function translate<T extends keyof Translation>(lang: string, key: T, ...args: FunctionParams<Translation[T]>) {
-  return internalTranslate(lang, key, ...args) as unknown;
+  return internalTranslate(lang, key, ...args) as string;
 }
 
 // Wrap the Lit translate directive
 export function translateDirective<T extends keyof Translation>(key: T, ...args: FunctionParams<Translation[T]>) {
-  return litTranslate(key, ...args) as unknown;
+  return litTranslate(key, ...args) as string;
 }
 ```
 
