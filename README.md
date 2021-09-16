@@ -10,7 +10,7 @@ Here's an example of how this library can be used to create a custom element wit
 
 
 ```ts
-import { litLocalize as localize, litTranslate as t, registerTranslation } from '@shoelace-style/localize';
+import { litLocalize as localize, litTranslate as t, registerTranslation } from '@shoelace-style/localize/dist/lit.js';
 import en from '../translations/en.ts';
 import es from '../translations/es.ts';
 
