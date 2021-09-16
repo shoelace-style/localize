@@ -296,7 +296,7 @@ en.goodbye_user = (name: string) => `Goodbye, ${name}`;
 ## Advantages
 
 - Extremely lightweight
-	- ~2.7 KB compared to ~33 KB for i18next (without translations; minified, not gzipped)
+	- ~2.7 KB compared to ~33 KB for i18next (both without translations; both minified, not gzipped)
 - Uses existing platform features
 - Supports simple terms, plurals, and complex translations
 	- Fun fact: some languages have [six plural forms](https://lingohub.com/blog/2019/02/pluralization) and this will support that
