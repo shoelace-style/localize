@@ -1,5 +1,5 @@
 import { Directive, directive, Part } from 'lit/directive.js';
-import { connectedElements, detectLanguage, formatDate, formatNumber, translate } from './';
+import { connectedElements, detectLanguage, formatDate as d, formatNumber as n, translate as t } from './';
 
 import type { FunctionParams, Translation } from './';
 import type { LitElement } from 'lit';
@@ -10,7 +10,7 @@ import type { LitElement } from 'lit';
  * This class decorator ensures lang is a reactive property and adds and removes the component to and from the
  * connectedElements set.
  */
-export function litLocalize() {
+export function localize() {
   return (targetClass: any): typeof targetClass => {
     return class extends targetClass {
       static get properties() {
@@ -51,13 +51,13 @@ class TranslateDirective extends Directive {
 
   render<K extends keyof Translation>(key: K, ...args: FunctionParams<Translation[K]>) {
     const lang = connectedElements.get(this.host as LitElement) || '';
-    return translate(lang, key, ...args);
+    return t(lang, key, ...args);
   }
 }
 
 const litDirective = directive(TranslateDirective);
 
-export function litTranslate<T extends keyof Translation>(key: T, ...args: FunctionParams<Translation[T]>) {
+export function translate<K extends keyof Translation>(key: K, ...args: FunctionParams<Translation[K]>) {
   return litDirective(key, ...args);
 }
 
@@ -76,11 +76,11 @@ class FormatDateDirective extends Directive {
 
   render(date: Date | string, options?: Intl.DateTimeFormatOptions) {
     const lang = connectedElements.get(this.host as LitElement) || '';
-    return formatDate(lang, date, options);
+    return d(lang, date, options);
   }
 }
 
-export const litFormatDate = directive(FormatDateDirective);
+export const formatDate = directive(FormatDateDirective);
 
 /**
  * Lit format number directive
@@ -97,8 +97,8 @@ class FormatNumberDirective extends Directive {
 
   render(number: number | string, options?: Intl.NumberFormatOptions) {
     const lang = connectedElements.get(this.host as LitElement) || '';
-    return formatNumber(lang, number, options);
+    return n(lang, number, options);
   }
 }
 
-export const litFormatNumber = directive(FormatNumberDirective);
+export const formatNumber = directive(FormatNumberDirective);
