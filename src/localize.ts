@@ -59,7 +59,8 @@ export function translate<K extends keyof Translation>(lang: string, key: K, ...
   } else if (fallback && fallback[key]) {
     term = fallback[key];
   } else {
-    throw new Error(`Cannot find "${key}" to translate.`);
+    console.error(`Cannot find "${key}" to translate.`);
+    return key;
   }
 
   if (typeof term === 'function') {
