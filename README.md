@@ -55,7 +55,7 @@ Typically, custom element authors dance around the problem by exposing attribute
 </my-element>
 ```
 
-But this approach offloads the problem to the user so they have to provide every term every time. It also doesn't scale with more complex components that have more than a couple terms to be translated.
+But this approach offloads the problem to the user so they have to provide every term, every time. It also doesn't scale with more complex components that have more than a handful of terms to be translated.
 
 This is the use case this library is solving for. It is by no means intended to solve localization at the framework level. There are much better tools for that.
 
@@ -78,9 +78,18 @@ To achieve this goal, we lean on HTML’s [`lang`](~https://developer.mozilla.or
 </html>
 ```
 
-This library provides a set of tools to localize dates, currencies, numbers, and terms in your custom element library with a minimal footprint. Reactivity is achieved with a [MutationObserver](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) that listens for `lang` changes in the document. This means that changing any `lang` attribute will tell localized components to update automatically.
+This library provides a set of tools to localize dates, currencies, numbers, and terms in your custom element library with a minimal footprint. Reactivity is achieved with a [MutationObserver](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) that listens for `lang` changes in the document. This means that changing a `lang` attribute in the DOM will automatically update all localized elements.
 
-_Exception: The mutation observer will not track `lang` changes within shadow roots. For this, there is a `forceUpdate()` method you can call to tell localized components to update._
+_Exception: The mutation observer will not track `lang` changes within shadow roots. For this, there is a `forceUpdate()` method you can call to tell localized elements to update._
+
+When a localized element is connected to the DOM, the library looks for the closest `lang` attribute, moving up through its ancestors and breaking through shadow roots as necessary. The element and its language are then cached internally. When a `lang` attribute changes. the library loops through all connected components, re-detects their language, and tells them to update. When an element is disconnected from the DOM, it is discarded from the map.
+
+By caching languages in a map, we're able to limit expensive DOM traversal so it only occurs:
+
+1. When the element is connected
+2. When a `lang` attribute changes
+
+At this time, there is no easier way to detect the "current language" of an arbitrary element. I consider this a gap in the platform and [I've proposed properties](https://github.com/whatwg/html/issues/7039) to make this lookup more efficient.
 
 ## Usage
 
@@ -142,7 +151,7 @@ The first translation to be registered will be used as the "fallback". That is, 
 
 Translations registered with subcodes such as `en-GB` are supported. However, your fallback translation must be registered with a base code (e.g. `en`) to ensure users of unsupported regions will still receive a comprehensible translation.
 
-For example, if you're primary language is `en-US`, you should register it as `en` so users with unsupported `en-*` subcodes will receive it as a fallback. Then you can register subcodes such as `en-GB` and `en-AU` to improve the experience for those additional regions.
+For example, if you're fallback language is `en-US`, you should register it as `en` so users with unsupported `en-*` subcodes will receive it as a fallback. Then you can register subcodes such as `en-GB` and `en-AU` to improve the experience for those additional regions.
 
 It's important to note that translations _do not_ have to be registered up front. You can register them on demand as the language changes in your app. Upon import, all localized components will update automatically.
 
