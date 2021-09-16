@@ -2,16 +2,15 @@
   "name": "@shoelace-style/localize",
   "version": "1.0.0",
   "description": "A micro library for localizing custom elements.",
-  "private": true,
-  "main": "/index.js",
-  "module": "/index.js",
+  "main": "/dist/index.js",
+  "module": "/dist/index.js",
   "type": "module",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "start": "tsc -w",
     "build": "tsc",
-    "prebuild": "node ./scripts/clean.js",
-    "postbuild": "node ./scripts/postbuild.js",
+    "clean": "node ./scripts/clean.js",
+    "prebuild": "npm run clean",
     "prepublishOnly": "npm run build"
   },
   "repository": {
