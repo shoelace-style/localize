@@ -10,7 +10,8 @@ Here's an example of how this library can be used to create a custom element wit
 
 
 ```ts
-import { litLocalize as localize, litTranslate as t, registerTranslation } from '@shoelace-style/localize/dist/lit.js';
+import { registerTranslation } from '@shoelace-style/localize';
+import { localize, translate as t } from '@shoelace-style/localize/dist/lit.js';
 import en from '../translations/en.ts';
 import es from '../translations/es.ts';
 
@@ -173,12 +174,7 @@ async function changeLanguage(lang) {
 If you're using [Lit](https://lit.dev/) to develop components, import the `@localize` directive and the corresponding translation function(s).
 
 ```ts
-import { 
-  litLocalize as localize, 
-  litTranslate as t, 
-  litFormatDate as d, 
-  litFormatNumber as n 
-} from '@shoelace-style/localize';
+import { localize, translate as t, formatDate as d, formatNumber as n } from '@shoelace-style/localize/dist/lit.js';
 
 @customElement('my-element')
 @localize()
@@ -261,7 +257,8 @@ However, you can optionally extend the `Translation` interface with your own and
 ```ts
 // translation.ts
 import type { FunctionParams, Translation as BaseTranslation } from '@shoelace-style/localize';
-import { translate as internalTranslate, litTranslate } from '@shoelace-style/localize';
+import { translate as internalTranslate } from '@shoelace-style/localize';
+import { translate as litTranslate } from '@shoelace-style/localize/dist/lit.js';
 
 export interface Translation extends BaseTranslation {
   upload: string;
