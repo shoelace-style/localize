@@ -12,8 +12,8 @@ Here's an example of how this library can be used to create a custom element wit
 ```ts
 import { registerTranslation } from '@shoelace-style/localize';
 import { localize, translate as t } from '@shoelace-style/localize/dist/lit.js';
-import en from '../translations/en.ts';
-import es from '../translations/es.ts';
+import en from '../translations/en';
+import es from '../translations/es';
 
 registerTranslation(en, es); // Can also be done outside of the component or on demand
 
@@ -142,8 +142,8 @@ Once you've created a translation, you need to register it before use. To regist
 
 ```ts
 import { registerTranslation } from '@shoelace-style/localize';
-import en from './en.ts';
-import es from './es.ts';
+import en from './en';
+import es from './es';
 
 registerTranslation(en, es);
 ```
