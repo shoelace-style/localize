@@ -27,11 +27,17 @@ export function localize() {
         connectedElements.delete(this as typeof targetClass);
       }
 
-      get lang(): string {
+      get lang() {
         return this.getAttribute('lang');
       }
 
       set lang(value: string) {
+        if (value === null || value === undefined) {
+          this.removeAttribute('lang');
+        } else {
+          this.setAttribute('lang', value);
+        }
+
         connectedElements.set(this as typeof targetClass, value);
         this.updateLocalizedTerms();
       }
