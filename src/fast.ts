@@ -28,7 +28,7 @@ export function localize() {
       }
 
       get lang(): string {
-        return this.lang;
+        return this.getAttribute('lang');
       }
 
       set lang(value: string) {
