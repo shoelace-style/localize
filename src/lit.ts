@@ -32,6 +32,10 @@ export function localize() {
         super.disconnectedCallback();
         connectedElements.delete(this as typeof targetClass);
       }
+
+      updateLocalizedTerms() {
+        this.requestUpdate();
+      }
     };
   };
 }

@@ -1,5 +1,3 @@
-import type { LitElement } from 'lit';
-
 export type FunctionParams<T> = T extends (...args: infer U) => string ? U : never;
 
 export interface Translation {
@@ -85,9 +83,8 @@ export function forceUpdate() {
     const lang = detectLanguage(el);
     connectedElements.set(el, lang);
 
-    // Lit Element
-    if (typeof (el as LitElement).requestUpdate === 'function') {
-      (el as LitElement).requestUpdate();
+    if (typeof (el as any).updateLocalizedTerms === 'function') {
+      (el as any).updateLocalizedTerms();
     }
   });
 }

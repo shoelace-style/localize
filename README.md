@@ -15,7 +15,7 @@ import { localize, translate as t } from '@shoelace-style/localize/dist/lit.js';
 import en from '../translations/en.ts';
 import es from '../translations/es.ts';
 
-registerTranslation(en, es); // Can also be done outside of the component or on demand
+registerTranslation(en, es); // Translations can also be loaded outside of the component and/or on demand
 
 @customElement('my-element')
 @localize()
@@ -171,9 +171,11 @@ async function changeLanguage(lang) {
 
 ### Lit
 
-If you're using [Lit](https://lit.dev/) to develop components, import the `@localize` directive and the corresponding translation function(s).
+If you're using [Lit](https://lit.dev/) to develop components:
 
 ```ts
+import { LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { localize, translate as t, formatDate as d, formatNumber as n } from '@shoelace-style/localize/dist/lit.js';
 
 @customElement('my-element')
@@ -196,7 +198,31 @@ export class MyElement extends LitElement {
 
 ### FAST
 
-Directives are coming soon for [FAST Element](https://www.fast.design/).
+If you're using [FAST Element](https://www.fast.design/) to develop components:
+
+```ts
+import { FASTElement, customElement } from '@microsoft/fast-element';
+import { localize, translate as t, formatDate as d, formatNumber as n } from '@shoelace-style/localize/dist/lit.js';
+
+const template = html<MyElement>`
+  <!-- Term -->
+  ${t('hello')}
+
+  <!-- Date -->
+  ${d('2021-09-15 14:00:00 ET'), { month: 'long', day: 'numeric', year: 'numeric' }}
+
+  <!-- Currency -->
+  ${n(1000, { style: 'currency', currency: 'USD'})}
+`;
+
+@customElement({
+  name: 'my-element',
+  template
+})
+export class MyElement extends FASTElement {
+  // ...
+}
+```
 
 ### No Library (Advanced)
 
@@ -217,6 +243,10 @@ class MyElement extends HTMLElement {
     connectedElements.delete(this);
   }
 
+  updateLocalizedTerms() {
+    // Called when the lang changes (this is where you update all localized terms in the element)
+  }
+
   static get observedAttributes() { 
     return ['lang'];
   }
@@ -224,7 +254,7 @@ class MyElement extends HTMLElement {
   attributeChangedCallback(name, oldValue, newValue) {
     // When lang changes, update the cache and trigger an update
     if (name === 'lang') {
-      forceUpdate();
+      this.updateLocalizedTerms();
     }
   }
 }
@@ -268,12 +298,12 @@ export interface Translation extends BaseTranslation {
 
 // Wrap the translate function
 export function translate<T extends keyof Translation>(lang: string, key: T, ...args: FunctionParams<Translation[T]>) {
-  return internalTranslate(lang, key, ...args) as string;
+  return internalTranslate(lang, key, ...args) as unknown;
 }
 
 // Wrap the Lit translate directive
 export function translateDirective<T extends keyof Translation>(key: T, ...args: FunctionParams<Translation[T]>) {
-  return litTranslate(key, ...args) as string;
+  return litTranslate(key, ...args) as unknown;
 }
 ```
 
