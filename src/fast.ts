@@ -1,5 +1,5 @@
 import { connectedElements, detectLanguage, translate as t, formatDate as d, formatNumber as n } from './';
-import type { CaptureType } from '@microsoft/fast-element';
+import type { CaptureType, TemplateValue } from '@microsoft/fast-element';
 import type { FunctionParams, Translation } from './';
 
 /**
@@ -72,8 +72,11 @@ function getLang(source: any) {
  *
  * Formats a number using the element's current language.
  */
-export function translate<K extends keyof Translation, TSource = any>(key: K, ...args: FunctionParams<Translation[K]>) {
-  return (source: TSource): string => {
+export function translate<TSource, K extends keyof Translation>(
+  key: K,
+  ...args: FunctionParams<Translation[K]>
+): CaptureType<TSource> {
+  return (source: any) => {
     return t(getLang(source), key, ...args);
   };
 }
@@ -87,7 +90,7 @@ export function formatDate<TSource = any>(
   date: Date | string,
   options?: Intl.DateTimeFormatOptions
 ): CaptureType<TSource> {
-  return (source: TSource): string => {
+  return (source: TSource): TemplateValue<any, any> => {
     return d(getLang(source), date, options);
   };
 }
@@ -101,7 +104,7 @@ export function formatNumber<TSource = any>(
   number: number | string,
   options?: Intl.DateTimeFormatOptions
 ): CaptureType<TSource> {
-  return (source: TSource): string => {
+  return (source: TSource): TemplateValue<any, any> => {
     return n(getLang(source), number, options);
   };
 }
