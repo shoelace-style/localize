@@ -77,8 +77,7 @@ export function translate<TSource, K extends keyof Translation>(
   ...args: FunctionParams<Translation[K]>
 ): CaptureType<TSource> {
   return (source: any) => {
-    const lang = getLang(source);
-    return t(lang, key, ...args);
+    return t(getLang(source), key, ...args);
   };
 }
 
