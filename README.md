@@ -206,13 +206,13 @@ import { localize, translate as t, formatDate as d, formatNumber as n } from '@s
 
 const template = html<MyElement>`
   <!-- Term -->
-  ${t('hello')}
+  ${x => t(x, 'hello')}
 
   <!-- Date -->
-  ${d('2021-09-15 14:00:00 ET'), { month: 'long', day: 'numeric', year: 'numeric' }}
+  ${x => d(x, '2021-09-15 14:00:00 ET'), { month: 'long', day: 'numeric', year: 'numeric' }}
 
   <!-- Currency -->
-  ${n(1000, { style: 'currency', currency: 'USD'})}
+  ${x => n(x, 1000, { style: 'currency', currency: 'USD'})}
 `;
 
 @customElement({
@@ -223,6 +223,8 @@ export class MyElement extends FASTElement {
   // ...
 }
 ```
+
+**Note:** This directive requires a context to be passed as the first argument. This is required because of a limitation in FAST's rendering engine that causes inconsistencies when a directive is used as `${t('example')}` vs. `${x => t('example')}`.
 
 ### No Library (Advanced)
 
