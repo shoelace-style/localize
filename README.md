@@ -202,7 +202,7 @@ If you're using [FAST Element](https://www.fast.design/) to develop components:
 
 ```ts
 import { FASTElement, customElement } from '@microsoft/fast-element';
-import { localize, translate as t, formatDate as d, formatNumber as n } from '@shoelace-style/localize/dist/lit.js';
+import { localize, translate as t, formatDate as d, formatNumber as n } from '@shoelace-style/localize/dist/fast.js';
 
 const template = html<MyElement>`
   <!-- Term -->
@@ -215,6 +215,7 @@ const template = html<MyElement>`
   ${x => n(x, 1000, { style: 'currency', currency: 'USD'})}
 `;
 
+@localize()
 @customElement({
   name: 'my-element',
   template
