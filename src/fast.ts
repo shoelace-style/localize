@@ -1,5 +1,5 @@
 import { connectedElements, detectLanguage, translate as t, formatDate as d, formatNumber as n } from './';
-import type { CaptureType, ExecutionContext, TemplateValue } from '@microsoft/fast-element';
+import type { CaptureType, ExecutionContext } from '@microsoft/fast-element';
 import type { FunctionParams, Translation } from './';
 
 /**
@@ -86,12 +86,11 @@ export function translate<TSource, K extends keyof Translation>(
  * Formats a date using the element's current language.
  */
 export function formatDate<TSource = any>(
+  context: ExecutionContext,
   date: Date | string,
   options?: Intl.DateTimeFormatOptions
 ): CaptureType<TSource> {
-  return (source: TSource): TemplateValue<any, any> => {
-    return d(getLang(source), date, options);
-  };
+  return d(getLang(context), date, options);
 }
 
 /**
@@ -100,10 +99,9 @@ export function formatDate<TSource = any>(
  * Formats a number using the element's current language.
  */
 export function formatNumber<TSource = any>(
+  context: ExecutionContext,
   number: number | string,
   options?: Intl.DateTimeFormatOptions
 ): CaptureType<TSource> {
-  return (source: TSource): TemplateValue<any, any> => {
-    return n(getLang(source), number, options);
-  };
+  return n(getLang(context), number, options);
 }
