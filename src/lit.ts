@@ -1,8 +1,14 @@
 import { Directive, directive, Part } from 'lit/directive.js';
-import { connectedElements, detectLanguage, formatDate as d, formatNumber as n, translate as t } from './';
+import {
+  connectedElements,
+  detectLanguage,
+  getSystemLanguage,
+  formatDate as d,
+  formatNumber as n,
+  translate as t
+} from './';
 
 import type { FunctionParams, Translation } from './';
-import type { LitElement } from 'lit';
 
 /**
  * Lit Decorator
@@ -54,7 +60,7 @@ class TranslateDirective extends Directive {
   }
 
   render<K extends keyof Translation>(key: K, ...args: FunctionParams<Translation[K]>) {
-    const lang = connectedElements.get(this.host as LitElement) || '';
+    const lang = connectedElements.get(this.host as HTMLElement) || getSystemLanguage();
     return t(lang, key, ...args);
   }
 }
@@ -79,7 +85,7 @@ class FormatDateDirective extends Directive {
   }
 
   render(date: Date | string, options?: Intl.DateTimeFormatOptions) {
-    const lang = connectedElements.get(this.host as LitElement) || '';
+    const lang = connectedElements.get(this.host as HTMLElement) || getSystemLanguage();
     return d(lang, date, options);
   }
 }
@@ -100,7 +106,7 @@ class FormatNumberDirective extends Directive {
   }
 
   render(number: number | string, options?: Intl.NumberFormatOptions) {
-    const lang = connectedElements.get(this.host as LitElement) || '';
+    const lang = connectedElements.get(this.host as HTMLElement) || getSystemLanguage();
     return n(lang, number, options);
   }
 }

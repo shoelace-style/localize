@@ -1,4 +1,11 @@
-import { connectedElements, detectLanguage, translate as t, formatDate as d, formatNumber as n } from './';
+import {
+  connectedElements,
+  detectLanguage,
+  getSystemLanguage,
+  translate as t,
+  formatDate as d,
+  formatNumber as n
+} from './';
 import type { CaptureType, ExecutionContext, FASTElement } from '@microsoft/fast-element';
 import type { FunctionParams, Translation } from './';
 
@@ -55,29 +62,18 @@ export function localize() {
   };
 }
 
-function getLang(source: any) {
-  let lang = '';
-
-  // A directive may be called from any context. In some cases, such as when contexts are nested, we won't have a
-  // reference to the host element. In that case, we can't provide a value for lang so we return an empty string.
-  if (source instanceof HTMLElement) {
-    lang = connectedElements.get(source) || '';
-  }
-
-  return lang;
-}
-
 /**
  * FAST format number directive
  *
  * Formats a number using the element's current language.
  */
 export function translate<TSource, K extends keyof Translation>(
-  context: ExecutionContext | FASTElement | HTMLElement,
+  contextOrElement: ExecutionContext | FASTElement | HTMLElement,
   key: K,
   ...args: FunctionParams<Translation[K]>
 ): CaptureType<TSource> {
-  return t(getLang(context), key, ...args);
+  const lang = connectedElements.get(contextOrElement as HTMLElement) || getSystemLanguage();
+  return t(lang, key, ...args);
 }
 
 /**
@@ -86,11 +82,12 @@ export function translate<TSource, K extends keyof Translation>(
  * Formats a date using the element's current language.
  */
 export function formatDate<TSource = any>(
-  context: ExecutionContext | FASTElement | HTMLElement,
+  contextOrElement: ExecutionContext | FASTElement | HTMLElement,
   date: Date | string,
   options?: Intl.DateTimeFormatOptions
 ): CaptureType<TSource> {
-  return d(getLang(context), date, options);
+  const lang = connectedElements.get(contextOrElement as HTMLElement) || getSystemLanguage();
+  return d(lang, date, options);
 }
 
 /**
@@ -99,9 +96,10 @@ export function formatDate<TSource = any>(
  * Formats a number using the element's current language.
  */
 export function formatNumber<TSource = any>(
-  context: ExecutionContext | FASTElement | HTMLElement,
+  contextOrElement: ExecutionContext | FASTElement | HTMLElement,
   number: number | string,
   options?: Intl.DateTimeFormatOptions
 ): CaptureType<TSource> {
-  return n(getLang(context), number, options);
+  const lang = connectedElements.get(contextOrElement as HTMLElement) || getSystemLanguage();
+  return n(lang, number, options);
 }

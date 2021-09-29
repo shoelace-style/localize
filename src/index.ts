@@ -25,9 +25,13 @@ function closest(selector: string, root: Element = this) {
   return getNext(root);
 }
 
+export function getSystemLanguage() {
+  return document.documentElement.lang || navigator.language;
+}
+
 export function detectLanguage(el: HTMLElement) {
   const closestEl = closest('[lang]', el) as HTMLElement;
-  return closestEl?.lang;
+  return closestEl?.lang || getSystemLanguage();
 }
 
 export function registerTranslation(...translation: Translation[]) {
@@ -69,13 +73,29 @@ export function translate<K extends keyof Translation>(lang: string, key: K, ...
 }
 
 export function formatDate(lang: string, date: Date | string, options?: Intl.DateTimeFormatOptions) {
+  let result = '';
   date = new Date(date);
-  return new Intl.DateTimeFormat(lang, options).format(date);
+
+  try {
+    result = new Intl.DateTimeFormat(lang, options).format(date);
+  } catch {
+    console.error(`Invalid language code: "${lang}"`);
+  }
+
+  return result;
 }
 
 export function formatNumber(lang: string, number: number | string, options?: Intl.NumberFormatOptions) {
+  let result = '';
   number = Number(number);
-  return isNaN(number) ? '' : new Intl.NumberFormat(lang, options).format(number);
+
+  try {
+    result = isNaN(number) ? '' : new Intl.NumberFormat(lang, options).format(number);
+  } catch {
+    console.error(`Invalid language code: "${lang}"`);
+  }
+
+  return result;
 }
 
 export function forceUpdate() {
