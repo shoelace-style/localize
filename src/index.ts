@@ -1,6 +1,6 @@
 import { LitElement, ReactiveController, ReactiveControllerHost } from 'lit';
 
-type FunctionParams<T> = T extends (...args: infer U) => string ? U : never;
+export type FunctionParams<T> = T extends (...args: infer U) => string ? U : never;
 
 export interface Translation {
   $code: string; // e.g. en, en-GB
@@ -13,6 +13,7 @@ const connectedElements = new Set<HTMLElement>();
 const documentElementObserver = new MutationObserver(updateLocalizedTerms);
 const translations: Map<string, Translation> = new Map();
 let documentLanguage = document.documentElement.lang || navigator.language;
+let fallback: Translation;
 
 // Watch for changes on <html lang>
 documentElementObserver.observe(document.documentElement, {
@@ -21,23 +22,31 @@ documentElementObserver.observe(document.documentElement, {
 });
 
 //
-// Registers a translation
+// Registers one or more translations
 //
-export function registerTranslation(translation: Translation) {
-  const code = translation.$code.toLowerCase();
-  translations.set(code, translation);
+export function registerTranslation(...translation: Translation[]) {
+  translation.map(t => {
+    const code = t.$code.toLowerCase();
+    translations.set(code, t);
+
+    // The first translation that's registered is the fallback
+    if (!fallback) {
+      fallback = t;
+    }
+  });
+
+  updateLocalizedTerms();
 }
 
 //
-// Translates a term using the specified locale. This function will look up translations starting with subcode (es-PE),
-// primary code (es), and then the default fallback translation (en).
+// Translates a term using the specified locale. Looks up translations in order of language + country codes (es-PE),
+// language code (es), then the fallback translation.
 //
 export function term<K extends keyof Translation>(lang: string, key: K, ...args: FunctionParams<Translation[K]>) {
   const code = lang.toLowerCase().slice(0, 2); // e.g. en
   const subcode = lang.length > 2 ? lang.toLowerCase() : ''; // e.g. en-GB
   const primary = translations.get(subcode);
   const secondary = translations.get(code);
-  const fallback = translations.get('en');
   let term: any;
 
   // Look for a matching term using subcode, code, then the fallback

@@ -2,33 +2,36 @@
 
 This micro library does not aim to replicate a full-blown localization tool. For that, you should use something like [i18next](https://www.i18next.com/). What this library _does_ do is provide a lightweight, framework-agnostic mechanism for sharing and applying translations across one or more custom elements in a component library.
 
-Included are methods for translating terms, dates, currencies, and numbers, as well as corresponding directives for Lit and FAST.
+Included are methods for translating terms, dates, currencies, and numbers and a [Reactive Controller](https://lit.dev/docs/composition/controllers/) that can be used as a mixin in Lit and other supportive component authoring libraries.
 
 ## Overview
 
-Here's an example of how this library can be used to create a custom element with Lit.
-
+Here's an example of how this library can be used to create a localized custom element with Lit.
 
 ```ts
-import { registerTranslation } from '@shoelace-style/localize';
-import { localize, translate as t } from '@shoelace-style/localize/dist/lit.js';
+import { LocalizeController, registerTranslation } from '@shoelace-style/localize';
+
+// Translations can also be loaded outside of the component and/or on the fly using dynamic imports
 import en from '../translations/en';
 import es from '../translations/es';
 
-registerTranslation(en, es); // Translations can also be loaded outside of the component and/or on demand
+registerTranslation(en, es);
 
 @customElement('my-element')
-@localize()
 export class MyElement extends LitElement {
+  private localize = new LocalizeController(this);
+
+  @property() lang: string;
+
   render() {
     return html`
-      <h1>${t('hello_user', 'world')}</h1>  <!-- outputs "Hello, world!" -->
+      <h1>${this.localize.term('hello_world')}</h1>
     `;
   }
 }
 ```
 
-Here's how your consumers will change languages.
+To set the page locale, apply the desired `lang` attribute to the `<html>` element.
 
 ```html
 <html lang="es">
@@ -36,7 +39,7 @@ Here's how your consumers will change languages.
 </html>
 ```
 
-Simply changing the `lang` attribute on any element in the DOM will trigger an update to all localized components.
+Changes to `<html lang>` will trigger an update to all localized components automatically.
 
 ## Why this instead of an i18n library?
 
@@ -44,7 +47,7 @@ It's not uncommon for a custom element to require localization, but implementing
 
 ```html
 <button type="button" aria-label="Close">
-  <svg><!-- close icon --></svg>
+  <svg>...</svg>
 </button>
 ```
 
@@ -58,39 +61,25 @@ Typically, custom element authors dance around the problem by exposing attribute
 
 But this approach offloads the problem to the user so they have to provide every term, every time. It also doesn't scale with more complex components that have more than a handful of terms to be translated.
 
-This is the use case this library is solving for. It is by no means intended to solve localization at the framework level. There are much better tools for that.
+This is the use case this library is solving for. It is not intended to solve localization at the framework level. There are much better tools for that.
 
 ## How it works
 
-To achieve this goal, we lean on HTML’s [`lang`](~https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang~) attribute to determine what languages should be used in various parts of the page. The default language is specified by `<html lang>`, but any element in the DOM can be scoped to a language by setting its `lang` attribute. This means you can have more than one language per page, if desired.
+To achieve this goal, we lean on HTML’s [`lang`](~https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang~) attribute to determine what language should be used. The default locale is specified by `<html lang="...">`, but any localized element can be scoped to a locale by setting its `lang` attribute. This means you can have more than one language per page, if desired.
 
 ```html
 <html lang="en">
 <body>
-
   <my-element>This element will be English</my-element>
-
-  <div lang="es">
-    <my-element>This element will be Spanish</my-element>
-    <my-element>This element is also Spanish</my-element>
-  </div>
-
+  <my-element lang="es">This element will be Spanish</my-element>
+  <my-element lang="fr">This element will be French</my-element>
 </body>
 </html>
 ```
 
-This library provides a set of tools to localize dates, currencies, numbers, and terms in your custom element library with a minimal footprint. Reactivity is achieved with a [MutationObserver](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) that listens for `lang` changes in the document. This means that changing a `lang` attribute in the DOM will automatically update all localized elements.
+This library provides a set of tools to localize dates, currencies, numbers, and terms in your custom element library with a minimal footprint. Reactivity is achieved with a [MutationObserver](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) that listens for `lang` changes on `<html>`.
 
-_Exception: The mutation observer will not track `lang` changes within shadow roots. For this, there is a `forceUpdate()` method you can call to tell localized elements to update._
-
-When a localized element is connected to the DOM, the library looks for the closest `lang` attribute, moving up through its ancestors and breaking through shadow roots as necessary. The element and its language are then cached internally. When a `lang` attribute changes. the library loops through all connected components, re-detects their language, and tells them to update. When an element is disconnected from the DOM, it is discarded from the map.
-
-By caching languages in a map, we're able to limit expensive DOM traversal so it only occurs:
-
-1. When the element is connected
-2. When a `lang` attribute changes
-
-At this time, there is no easier way to detect the "current language" of an arbitrary element. I consider this a gap in the platform and [I've proposed properties](https://github.com/whatwg/html/issues/7039) to make this lookup more efficient.
+By design, `lang` attributes on ancestor elements are ignored. This is for performance reasons, as there isn't an efficient way to detect the "current language" of an arbitrary element. I consider this a gap in the platform and [I've proposed properties](https://github.com/whatwg/html/issues/7039) to make this lookup less expensive.
 
 ## Usage
 
@@ -102,13 +91,13 @@ npm install @shoelace-style/localize
 
 Next, follow these steps to localize your components.
 
-1. Create one or more translations
-2. Register the translations
+1. Create a translation
+2. Register the translation
 3. Localize your components
 
-### Creating Translations
+### Creating a Translation
 
-Every translation must extend the `Translation` type. All translations must implement the required meta properties (denoted by a `$` prefix) and additional terms can be implemented as show below.
+All translations must extend the `Translation` type and implement the required meta properties (denoted by a `$` prefix). Additional terms can be implemented as show below.
 
 ```ts
 // en.ts
@@ -119,11 +108,11 @@ const translation: Translation = {
   $name: 'English',
   $dir: 'ltr',
 
-  // Terms
+  // Simple terms
   upload: 'Upload',
 
-  // Placeholders
-  hello_user: (name: string) => `Hello, ${name}!`,
+  // Terms with placeholders
+  greet_user: (name: string) => `Hello, ${name}!`,
 
   // Plurals
   num_files_selected: (count: number) => {
@@ -148,13 +137,15 @@ import es from './es';
 registerTranslation(en, es);
 ```
 
-The first translation to be registered will be used as the "fallback". That is, if a term is missing from the target language, the fallback language will be used instead.
+The first translation that's registered will be used as the _fallback_. That is, if a term is missing from the target language, the fallback language will be used instead.
 
-Translations registered with subcodes such as `en-GB` are supported. However, your fallback translation must be registered with a base code (e.g. `en`) to ensure users of unsupported regions will still receive a comprehensible translation.
+Translations registered with country such as `en-GB` are supported. However, your fallback translation must be registered with only a language code (e.g. `en`) to ensure users of unsupported regions will still receive a comprehensible translation.
 
-For example, if you're fallback language is `en-US`, you should register it as `en` so users with unsupported `en-*` subcodes will receive it as a fallback. Then you can register subcodes such as `en-GB` and `en-AU` to improve the experience for those additional regions.
+For example, if you're fallback language is `en-US`, you should register it as `en` so users with unsupported `en-*` country codes will receive it as a fallback. Then you can register country codes such as `en-GB` and `en-AU` to improve the experience for additional regions.
 
-It's important to note that translations _do not_ have to be registered up front. You can register them on demand as the language changes in your app. Upon import, all localized components will update automatically.
+It's important to note that translations _do not_ have to be registered up front. You can register them on demand as the language changes in your app. Upon registration, localized components will update automatically.
+
+Here's a sample function that dynamically loads a translation.
 
 ```ts
 import { registerTranslation } from '@shoelace-style/localize';
@@ -169,178 +160,51 @@ async function changeLanguage(lang) {
 }
 ```
 
-### Lit
+### Localizing Components
 
-If you're using [Lit](https://lit.dev/) to develop components:
+You can use the `LocalizeController` with any library that supports [Lit's Reactive Controller pattern](https://lit.dev/docs/composition/controllers/). In [Lit](https://lit.dev/), a localized custom element will look something like this.
 
 ```ts
 import { LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { localize, translate as t, formatDate as d, formatNumber as n } from '@shoelace-style/localize/dist/lit.js';
+import { LocalizeController } from '@shoelace-style/localize/dist/lit.js';
 
 @customElement('my-element')
-@localize()
 export class MyElement extends LitElement {
+  private localize = new LocalizeController(this);
+
+  @property() lang: string;
+
   render() {
     return html`
       <!-- Term -->
-      ${t('hello')}
+      ${this.localize.term('hello')}
 
       <!-- Date -->
-      ${d('2021-09-15 14:00:00 ET'), { month: 'long', day: 'numeric', year: 'numeric' }}
+      ${this.localize.date('2021-09-15 14:00:00 ET'), { month: 'long', day: 'numeric', year: 'numeric' }}
 
-      <!-- Currency -->
-      ${n(1000, { style: 'currency', currency: 'USD'})}
+      <!-- Number/currency -->
+      ${this.localize.number(1000, { style: 'currency', currency: 'USD'})}
     `;
   }
 }
 ```
 
-### FAST
-
-If you're using [FAST Element](https://www.fast.design/) to develop components:
-
-```ts
-import { FASTElement, customElement } from '@microsoft/fast-element';
-import { localize, translate as t, formatDate as d, formatNumber as n } from '@shoelace-style/localize/dist/fast.js';
-
-const template = html<MyElement>`
-  <!-- Term -->
-  ${x => t(x, 'hello')}
-
-  <!-- Date -->
-  ${x => d(x, '2021-09-15 14:00:00 ET'), { month: 'long', day: 'numeric', year: 'numeric' }}
-
-  <!-- Currency -->
-  ${x => n(x, 1000, { style: 'currency', currency: 'USD'})}
-`;
-
-@localize()
-@customElement({
-  name: 'my-element',
-  template
-})
-export class MyElement extends FASTElement {
-  // ...
-}
-```
-
-**Note:** This directive requires a context to be passed as the first argument. This is required because of a limitation in FAST's rendering engine that causes inconsistencies when a directive is used as `${t('example')}` vs. `${x => t('example')}`.
-
-### No Library (Advanced)
-
-To use this without a custom element library, you'll need to follow this pattern.
-
-```ts
-import { connectedElements, detectLanguage, forceUpdate } from '@shoelace-style/localize';
-
-class MyElement extends HTMLElement {
-  connectedCallback() {
-    // Register the component when it's connected and cache the current language
-    const lang = detectLanguage(this);
-    connectedElements.set(this, lang);
-  }
-
-  disconnectedCallback() {
-    // Remove the element from cache when it disconnects from the DOM
-    connectedElements.delete(this);
-  }
-
-  updateLocalizedTerms() {
-    // Called when the lang changes (this is where you update all localized terms in the element)
-  }
-
-  static get observedAttributes() { 
-    return ['lang'];
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    // When lang changes, update the cache and trigger an update
-    if (name === 'lang') {
-      this.updateLocalizedTerms();
-    }
-  }
-}
-```
-
-Three core translation functions are exposed for translating terms, dates, numbers, and currencies. The `translate()` function relies on the translations you provide, while the `formatDate()` and `formatNumber()` functions use the [`Intl` API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) to localize dates, numbers, and currencies.
-
-These are the functions that get called internally by the Lit directives. Note that `lang` is a required argument. If you use this API, make sure to use the cached language values available in the `connectedElements` map to avoid expensive DOM traversal.
-
-```ts
-function translate(lang: string, key: string, args: any) {
-  // returns a localized term
-}
-
-function formatDate(lang: string, date: Date | string, options: Intl.DateTimeFormatOptions) {
-  // returns a localized date
-}
-
-function formatNumber(lang: string, number: number | string, options?: Intl.NumberFormatOptions) {
-  // returns a localized number or currency
-}
-```
-
-### Typed Arguments
-
-As the `Translation` interface is extended by the user, and because terms can have varying arguments, there's no way for TypeScript to automatically know about the terms you've added. This means we won't get strongly typed arguments when calling `translate()` or a translate directive.
-
-However, you can optionally extend the `Translation` interface with your own and wrap the translation functions you want to enable strong typings for.
-
-```ts
-// translation.ts
-import type { FunctionParams, Translation as BaseTranslation } from '@shoelace-style/localize';
-import { translate as internalTranslate } from '@shoelace-style/localize';
-import { translate as litTranslate } from '@shoelace-style/localize/dist/lit.js';
-
-export interface Translation extends BaseTranslation {
-  upload: string;
-  hello_user: (name: string) => string;
-  num_files_selected: (count: number) => string;
-}
-
-// Wrap the translate function
-export function translate<T extends keyof Translation>(lang: string, key: T, ...args: FunctionParams<Translation[T]>) {
-  return internalTranslate(lang, key, ...args) as unknown;
-}
-
-// Wrap the Lit translate directive
-export function translateDirective<T extends keyof Translation>(key: T, ...args: FunctionParams<Translation[T]>) {
-  return litTranslate(key, ...args) as unknown;
-}
-```
-
-Now, instead of importing from `@shoelace-style/localize`, you can import these functions from your own `translation.ts` module and you'll get strongly typed translation keys and arguments!
-
-### Appending Terms
-
-Occassionaly, third-party components may want to make use of your localization library. Should you choose to expose this as an option, here's how terms can be added to translations that are already registered.
-
-```ts
-import en from './en';
-
-en.logout = 'Logout';
-en.goodbye_user = (name: string) => `Goodbye, ${name}`;
-```
-
 ## Advantages
 
 - Extremely lightweight
-	- ~2.7 KB compared to ~33 KB for i18next (both without translations; both minified, not gzipped)
+	- ~2.5 KB compared to ~33 KB for i18next (both without translations/minifications)
 - Uses existing platform features
 - Supports simple terms, plurals, and complex translations
 	- Fun fact: some languages have [six plural forms](https://lingohub.com/blog/2019/02/pluralization) and this will support that
 - Supports dates, numbers, and currencies
 - Good DX for custom element authors and consumers
-	- Authors have directives to localize components using popular libraries
-	- Consumers only need to load the translations they want to use and set the `lang` attribute
+  - Intuitive API for custom element authors
+  - Consumers only need to load the translations they want and set the `lang` attribute
 - Translations can be loaded up front or on demand
 - Translations can be created by consumers without having to wait for them to get accepted upstream
-- Strong typings when using translations (requires a custom Translation interface and a wrapper function)
 
 ## Disadvantages
 
 - Complex translations require some code, such as conditionals
 	- This is arguably no more difficult than, for example, adding them to a [YAML](https://edgeguides.rubyonrails.org/i18n.html#pluralization) or [XLIFF](https://en.wikipedia.org/wiki/XLIFF) file
-
-Note that we aren’t aiming to solve localization at the framework level. Many teams already have their own translation libraries, so we need to provide something that will work in tandem with those with a minimal learning curve.
