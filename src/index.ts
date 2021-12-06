@@ -1,57 +1,44 @@
-export type FunctionParams<T> = T extends (...args: infer U) => string ? U : never;
+import { LitElement, ReactiveController, ReactiveControllerHost } from 'lit';
+
+type FunctionParams<T> = T extends (...args: infer U) => string ? U : never;
 
 export interface Translation {
   $code: string; // e.g. en, en-GB
   $name: string; // e.g. English, Español
   $dir: 'ltr' | 'rtl';
-
   [key: string]: any;
 }
 
-export const connectedElements = new Map<HTMLElement, string>();
-const documentElementObserver = new MutationObserver(() => forceUpdate());
+const connectedElements = new Set<HTMLElement>();
+const documentElementObserver = new MutationObserver(updateLocalizedTerms);
 const translations: Map<string, Translation> = new Map();
-let fallback: Translation;
+let documentLanguage = document.documentElement.lang || navigator.language;
 
-function closest(selector: string, root: Element = this) {
-  function getNext(el: Element | HTMLElement, next = el && el.closest(selector)): Element | null {
-    if (el instanceof Window || el instanceof Document || !el) {
-      return null;
-    }
+// Watch for changes on <html lang>
+documentElementObserver.observe(document.documentElement, {
+  attributes: true,
+  attributeFilter: ['lang']
+});
 
-    return next ? next : getNext((el.getRootNode() as ShadowRoot).host);
-  }
-
-  return getNext(root);
+//
+// Registers a translation
+//
+export function registerTranslation(translation: Translation) {
+  const code = translation.$code.toLowerCase();
+  translations.set(code, translation);
 }
 
-export function getSystemLanguage() {
-  return document.documentElement.lang || navigator.language;
-}
-
-export function detectLanguage(el: HTMLElement) {
-  const closestEl = closest('[lang]', el) as HTMLElement;
-  return closestEl?.lang || getSystemLanguage();
-}
-
-export function registerTranslation(...translation: Translation[]) {
-  translation.map(t => {
-    const code = t.$code.toLowerCase();
-    translations.set(code, t);
-
-    // Use the first translation that's registered as the fallback
-    if (!fallback) {
-      fallback = t;
-    }
-  });
-}
-
-export function translate<K extends keyof Translation>(lang: string, key: K, ...args: FunctionParams<Translation[K]>) {
+//
+// Translates a term using the specified locale. This function will look up translations starting with subcode (es-PE),
+// primary code (es), and then the default fallback translation (en).
+//
+export function term<K extends keyof Translation>(lang: string, key: K, ...args: FunctionParams<Translation[K]>) {
   const code = lang.toLowerCase().slice(0, 2); // e.g. en
-  const subcode = lang.length > 2 ? lang.toLowerCase() : ''; // e.g. en-US
+  const subcode = lang.length > 2 ? lang.toLowerCase() : ''; // e.g. en-GB
   const primary = translations.get(subcode);
   const secondary = translations.get(code);
-  let term;
+  const fallback = translations.get('en');
+  let term: any;
 
   // Look for a matching term using subcode, code, then the fallback
   if (primary && primary[key]) {
@@ -61,58 +48,89 @@ export function translate<K extends keyof Translation>(lang: string, key: K, ...
   } else if (fallback && fallback[key]) {
     term = fallback[key];
   } else {
-    console.error(`Cannot find "${key}" to translate.`);
+    console.error(`No translation found for: ${key}`);
     return key;
   }
 
   if (typeof term === 'function') {
-    return term(...args);
+    return term(...args) as string;
   }
 
   return term;
 }
 
-export function formatDate(lang: string, date: Date | string, options?: Intl.DateTimeFormatOptions) {
-  let result = '';
-  date = new Date(date);
-
-  try {
-    result = new Intl.DateTimeFormat(lang, options).format(date);
-  } catch {
-    console.error(`Invalid language code: "${lang}"`);
-  }
-
-  return result;
+//
+// Formats a date using the specified locale.
+//
+export function date(lang: string, dateToFormat: Date | string, options?: Intl.DateTimeFormatOptions) {
+  dateToFormat = new Date(dateToFormat);
+  return new Intl.DateTimeFormat(lang, options).format(dateToFormat);
 }
 
-export function formatNumber(lang: string, number: number | string, options?: Intl.NumberFormatOptions) {
-  let result = '';
-  number = Number(number);
-
-  try {
-    result = isNaN(number) ? '' : new Intl.NumberFormat(lang, options).format(number);
-  } catch {
-    console.error(`Invalid language code: "${lang}"`);
-  }
-
-  return result;
+//
+// Formats a number using the specified locale.
+//
+export function number(lang: string, numberToFormat: number | string, options?: Intl.NumberFormatOptions) {
+  numberToFormat = Number(numberToFormat);
+  return isNaN(numberToFormat) ? '' : new Intl.NumberFormat(lang, options).format(numberToFormat);
 }
 
-export function forceUpdate() {
-  [...connectedElements.keys()].map(el => {
-    const lang = detectLanguage(el);
-    connectedElements.set(el, lang);
+//
+// Updates the locale for all localized elements that are currently connected
+//
+export function updateLocalizedTerms() {
+  documentLanguage = document.documentElement.lang || navigator.language;
 
-    if (typeof (el as any).updateLocalizedTerms === 'function') {
-      (el as any).updateLocalizedTerms();
+  [...connectedElements.keys()].map((el: LitElement) => {
+    if (typeof el.requestUpdate === 'function') {
+      el.requestUpdate();
     }
   });
 }
 
-// Update connected elements when a lang attribute changes
-documentElementObserver.observe(document.documentElement, {
-  attributes: true,
-  attributeFilter: ['lang'],
-  childList: true,
-  subtree: true
-});
+//
+// Reactive controller
+//
+// To use this controller, import the class and instantiate it in a custom element constructor:
+//
+//  private localize = new LocalizeController(this);
+//
+// This will add the element to the set and make it respond to changes to <html lang> automatically. To make it respond
+// to changes to its own lang property, make it a property:
+//
+//  @property() lang: string;
+//
+// To use a translation method, call it like this:
+//
+//  ${this.localize.term('term_key_here')}
+//  ${this.localize.date('2021-12-03')}
+//  ${this.localize.number(1000000)}
+//
+export class LocalizeController implements ReactiveController {
+  host: ReactiveControllerHost & HTMLElement;
+
+  constructor(host: ReactiveControllerHost & HTMLElement) {
+    this.host = host;
+    this.host.addController(this);
+  }
+
+  hostConnected() {
+    connectedElements.add(this.host);
+  }
+
+  hostDisconnected() {
+    connectedElements.delete(this.host);
+  }
+
+  term<K extends keyof Translation>(key: K, ...args: FunctionParams<Translation[K]>) {
+    return term(this.host.lang || documentLanguage, key, ...args);
+  }
+
+  date(dateToFormat: Date | string, options?: Intl.DateTimeFormatOptions) {
+    return date(this.host.lang || documentLanguage, dateToFormat, options);
+  }
+
+  number(numberToFormat: number | string, options?: Intl.NumberFormatOptions) {
+    return number(this.host.lang || documentLanguage, numberToFormat, options);
+  }
+}
