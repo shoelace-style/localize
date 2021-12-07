@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.1
+
+- Change import to ensure only types get used
+
 ## 2.1.0
 
 - Added relative time method to 
