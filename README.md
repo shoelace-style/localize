@@ -1,6 +1,6 @@
 # Shoelace: Localize
 
-This micro library does not aim to replicate a full-blown localization tool. For that, you should use something like [i18next](https://www.i18next.com/). What this library _does_ do is provide a lightweight, framework-agnostic mechanism for sharing and applying translations across one or more custom elements in a component library.
+This zero-dependency micro library does not aim to replicate a full-blown localization tool. For that, you should use something like [i18next](https://www.i18next.com/). What this library _does_ do is provide a lightweight, framework-agnostic mechanism for sharing and applying translations across one or more custom elements in a component library.
 
 Included are methods for translating terms, dates, currencies, and numbers and a [Reactive Controller](https://lit.dev/docs/composition/controllers/) that can be used as a mixin in Lit and other supportive component authoring libraries.
 
@@ -193,7 +193,8 @@ export class MyElement extends LitElement {
 ## Advantages
 
 - Extremely lightweight
-	- ~2.5 KB compared to ~33 KB for i18next (both without translations/minifications)
+  - Zero dependencies
+	- Version 2.1 measures 726 bytes (yes, _bytes_) after minify + gzip
 - Uses existing platform features
 - Supports simple terms, plurals, and complex translations
 	- Fun fact: some languages have [six plural forms](https://lingohub.com/blog/2019/02/pluralization) and this will support that

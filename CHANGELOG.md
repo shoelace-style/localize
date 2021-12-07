@@ -1,5 +1,10 @@
 # Changelog
 
+
+## 2.1.2
+
+- Removed all dependencies
+
 ## 2.1.1
 
 - Change import to ensure only types get used

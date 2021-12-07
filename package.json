@@ -34,9 +34,7 @@
   "homepage": "https://github.com/shoelace-style/localize#readme",
   "devDependencies": {
     "del": "^6.0.0",
+    "lit": "^2.0.2",
     "typescript": "^4.4.3"
-  },
-  "dependencies": {
-    "lit": "^2.0.2"
   }
 }
