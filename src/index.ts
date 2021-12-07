@@ -10,7 +10,7 @@ export interface Translation {
 }
 
 const connectedElements = new Set<HTMLElement>();
-const documentElementObserver = new MutationObserver(updateLocalizedTerms);
+const documentElementObserver = new MutationObserver(update);
 const translations: Map<string, Translation> = new Map();
 let documentLanguage = document.documentElement.lang || navigator.language;
 let fallback: Translation;
@@ -35,7 +35,7 @@ export function registerTranslation(...translation: Translation[]) {
     }
   });
 
-  updateLocalizedTerms();
+  update();
 }
 
 //
@@ -97,9 +97,9 @@ export function relativeTime(
 }
 
 //
-// Updates the locale for all localized elements that are currently connected
+// Updates all localized elements that are currently connected
 //
-export function updateLocalizedTerms() {
+export function update() {
   documentLanguage = document.documentElement.lang || navigator.language;
 
   [...connectedElements.keys()].map((el: LitElement) => {

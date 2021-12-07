@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.1.3
+
+- Renamed `updateLocalizedTerms()` to `update()` (forgive me SemVer, but nobody was using this I promise)
 
 ## 2.1.2
 
