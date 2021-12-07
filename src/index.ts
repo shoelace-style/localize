@@ -85,6 +85,18 @@ export function number(lang: string, numberToFormat: number | string, options?: 
 }
 
 //
+// Formats a relative date using the specified locale.
+//
+export function relativeTime(
+  lang: string,
+  value: number,
+  unit: Intl.RelativeTimeFormatUnit,
+  options?: Intl.RelativeTimeFormatOptions
+) {
+  return new Intl.RelativeTimeFormat(lang, options).format(value, unit);
+}
+
+//
 // Updates the locale for all localized elements that are currently connected
 //
 export function updateLocalizedTerms() {
@@ -141,5 +153,9 @@ export class LocalizeController implements ReactiveController {
 
   number(numberToFormat: number | string, options?: Intl.NumberFormatOptions) {
     return number(this.host.lang || documentLanguage, numberToFormat, options);
+  }
+
+  relativeTime(value: number, unit: Intl.RelativeTimeFormatUnit, options?: Intl.RelativeTimeFormatOptions) {
+    return relativeTime(this.host.lang || documentLanguage, value, unit, options);
   }
 }
