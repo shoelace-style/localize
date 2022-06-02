@@ -185,6 +185,9 @@ export class MyElement extends LitElement {
 
       <!-- Number/currency -->
       ${this.localize.number(1000, { style: 'currency', currency: 'USD'})}
+
+      <!-- Determining directionality, e.g. 'ltr' or 'rtl' -->
+      ${this.localize.dir()}
     `;
   }
 }

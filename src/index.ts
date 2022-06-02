@@ -12,6 +12,7 @@ export interface Translation {
 const connectedElements = new Set<HTMLElement>();
 const documentElementObserver = new MutationObserver(update);
 const translations: Map<string, Translation> = new Map();
+let documentDirection = document.documentElement.dir || 'ltr';
 let documentLanguage = document.documentElement.lang || navigator.language;
 let fallback: Translation;
 
@@ -100,6 +101,7 @@ export function relativeTime(
 // Updates all localized elements that are currently connected
 //
 export function update() {
+  documentDirection = document.documentElement.dir || 'ltr';
   documentLanguage = document.documentElement.lang || navigator.language;
 
   [...connectedElements.keys()].map((el: LitElement) => {
@@ -143,18 +145,38 @@ export class LocalizeController implements ReactiveController {
     connectedElements.delete(this.host);
   }
 
+  /**
+   * Gets the host element's directionality as determined by the `dir` attribute. The return value is transformed to
+   * lowercase.
+   */
+  dir() {
+    return `${this.host.dir || documentDirection}`.toLowerCase();
+  }
+
+  /**
+   * Gets the host element's language as determined by the `lang` attribute. The return value is transformed to
+   * lowercase.
+   */
+  lang() {
+    return `${this.host.lang || documentLanguage}`.toLowerCase();
+  }
+
   term<K extends keyof Translation>(key: K, ...args: FunctionParams<Translation[K]>) {
+    /** Outputs a localized term. */
     return term(this.host.lang || documentLanguage, key, ...args);
   }
 
+  /** Outputs a localized date in the specified format. */
   date(dateToFormat: Date | string, options?: Intl.DateTimeFormatOptions) {
     return date(this.host.lang || documentLanguage, dateToFormat, options);
   }
 
+  /** Outputs a localized number in the specified format. */
   number(numberToFormat: number | string, options?: Intl.NumberFormatOptions) {
     return number(this.host.lang || documentLanguage, numberToFormat, options);
   }
 
+  /** Outputs a localized time in relative format. */
   relativeTime(value: number, unit: Intl.RelativeTimeFormatUnit, options?: Intl.RelativeTimeFormatOptions) {
     return relativeTime(this.host.lang || documentLanguage, value, unit, options);
   }
