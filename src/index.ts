@@ -19,7 +19,7 @@ let fallback: Translation;
 // Watch for changes on <html lang>
 documentElementObserver.observe(document.documentElement, {
   attributes: true,
-  attributeFilter: ['lang']
+  attributeFilter: ['dir', 'lang']
 });
 
 //
@@ -118,9 +118,10 @@ export function update() {
 //
 //  private localize = new LocalizeController(this);
 //
-// This will add the element to the set and make it respond to changes to <html lang> automatically. To make it respond
-// to changes to its own lang property, make it a property:
+// This will add the element to the set and make it respond to changes to <html dir|lang> automatically. To make it
+// respond to changes to its own dir|lang properties, make it a property:
 //
+//  @property() dir: string;
 //  @property() lang: string;
 //
 // To use a translation method, call it like this:

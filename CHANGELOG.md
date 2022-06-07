@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.1
+
+- Fixed a bug that prevented updates from happening when `<html dir>` changed
+
 ## 2.2.0
 
 - Added `dir()` method to return the target element's directionality
