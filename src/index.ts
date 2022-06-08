@@ -1,4 +1,4 @@
-import type { LitElement, ReactiveController, ReactiveControllerHost } from 'lit';
+import type { ReactiveControllerHost } from 'lit';
 
 export type FunctionParams<T> = T extends (...args: infer U) => string ? U : never;
 
@@ -9,7 +9,9 @@ export interface Translation {
   [key: string]: any;
 }
 
-const connectedElements = new Set<HTMLElement>();
+type ReactiveElement = HTMLElement & ReactiveControllerHost & { requestUpdate(): void };
+
+const elementUpdaters = new Set<() => void>();
 const documentElementObserver = new MutationObserver(update);
 const translations: Map<string, Translation> = new Map();
 let documentDirection = document.documentElement.dir || 'ltr';
@@ -26,7 +28,7 @@ documentElementObserver.observe(document.documentElement, {
 // Registers one or more translations
 //
 export function registerTranslation(...translation: Translation[]) {
-  translation.map(t => {
+  translation.forEach(t => {
     const code = t.$code.toLowerCase();
     translations.set(code, t);
 
@@ -100,19 +102,14 @@ export function relativeTime(
 //
 // Updates all localized elements that are currently connected
 //
-export function update() {
+function update() {
   documentDirection = document.documentElement.dir || 'ltr';
   documentLanguage = document.documentElement.lang || navigator.language;
-
-  [...connectedElements.keys()].map((el: LitElement) => {
-    if (typeof el.requestUpdate === 'function') {
-      el.requestUpdate();
-    }
-  });
+  elementUpdaters.forEach(updater => updater());
 }
 
 //
-// Reactive controller
+// LocalizeController
 //
 // To use this controller, import the class and instantiate it in a custom element constructor:
 //
@@ -130,20 +127,32 @@ export function update() {
 //  ${this.localize.date('2021-12-03')}
 //  ${this.localize.number(1000000)}
 //
-export class LocalizeController implements ReactiveController {
-  host: ReactiveControllerHost & HTMLElement;
+export class LocalizeController {
+  private element: HTMLElement;
 
-  constructor(host: ReactiveControllerHost & HTMLElement) {
-    this.host = host;
-    this.host.addController(this);
-  }
+  constructor(
+    subject:
+      | ReactiveElement
+      | {
+          element: HTMLElement;
+          update: () => void;
+          onConnect: (action: () => void) => void;
+          onDisconnect: (action: () => void) => void;
+        }
+  ) {
+    if (subject instanceof HTMLElement) {
+      this.element = subject;
+      const updater = () => subject.requestUpdate();
 
-  hostConnected() {
-    connectedElements.add(this.host);
-  }
-
-  hostDisconnected() {
-    connectedElements.delete(this.host);
+      subject.addController({
+        hostConnected: () => elementUpdaters.add(updater),
+        hostDisconnected: () => elementUpdaters.delete(updater)
+      });
+    } else {
+      this.element = subject.element;
+      subject.onConnect(() => elementUpdaters.add(subject.update));
+      subject.onDisconnect(() => elementUpdaters.delete(subject.update));
+    }
   }
 
   /**
@@ -151,7 +160,7 @@ export class LocalizeController implements ReactiveController {
    * lowercase.
    */
   dir() {
-    return `${this.host.dir || documentDirection}`.toLowerCase();
+    return `${this.element.dir || documentDirection}`.toLowerCase();
   }
 
   /**
@@ -159,26 +168,26 @@ export class LocalizeController implements ReactiveController {
    * lowercase.
    */
   lang() {
-    return `${this.host.lang || documentLanguage}`.toLowerCase();
+    return `${this.element.lang || documentLanguage}`.toLowerCase();
   }
 
   term<K extends keyof Translation>(key: K, ...args: FunctionParams<Translation[K]>) {
     /** Outputs a localized term. */
-    return term(this.host.lang || documentLanguage, key, ...args);
+    return term(this.element.lang || documentLanguage, key, ...args);
   }
 
   /** Outputs a localized date in the specified format. */
   date(dateToFormat: Date | string, options?: Intl.DateTimeFormatOptions) {
-    return date(this.host.lang || documentLanguage, dateToFormat, options);
+    return date(this.element.lang || documentLanguage, dateToFormat, options);
   }
 
   /** Outputs a localized number in the specified format. */
   number(numberToFormat: number | string, options?: Intl.NumberFormatOptions) {
-    return number(this.host.lang || documentLanguage, numberToFormat, options);
+    return number(this.element.lang || documentLanguage, numberToFormat, options);
   }
 
   /** Outputs a localized time in relative format. */
   relativeTime(value: number, unit: Intl.RelativeTimeFormatUnit, options?: Intl.RelativeTimeFormatOptions) {
-    return relativeTime(this.host.lang || documentLanguage, value, unit, options);
+    return relativeTime(this.element.lang || documentLanguage, value, unit, options);
   }
 }
