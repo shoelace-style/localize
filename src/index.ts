@@ -6,6 +6,9 @@ export interface Translation {
   $code: string; // e.g. en, en-GB
   $name: string; // e.g. English, Español
   $dir: 'ltr' | 'rtl';
+}
+
+export interface DefaultTranslation extends Translation {
   [key: string]: any;
 }
 
@@ -28,7 +31,13 @@ documentElementObserver.observe(document.documentElement, {
 export function registerTranslation(...translation: Translation[]) {
   translation.map(t => {
     const code = t.$code.toLowerCase();
-    translations.set(code, t);
+
+    if (translations.has(code)) {
+      // Merge translations that share the same language code
+      translations.set(code, { ...translations.get(code), ...t });
+    } else {
+      translations.set(code, t);
+    }
 
     // The first translation that's registered is the fallback
     if (!fallback) {
@@ -37,64 +46,6 @@ export function registerTranslation(...translation: Translation[]) {
   });
 
   update();
-}
-
-//
-// Translates a term using the specified locale. Looks up translations in order of language + country codes (es-PE),
-// language code (es), then the fallback translation.
-//
-export function term<K extends keyof Translation>(lang: string, key: K, ...args: FunctionParams<Translation[K]>) {
-  const code = lang.toLowerCase().slice(0, 2); // e.g. en
-  const subcode = lang.length > 2 ? lang.toLowerCase() : ''; // e.g. en-GB
-  const primary = translations.get(subcode);
-  const secondary = translations.get(code);
-  let term: any;
-
-  // Look for a matching term using subcode, code, then the fallback
-  if (primary && primary[key]) {
-    term = primary[key];
-  } else if (secondary && secondary[key]) {
-    term = secondary[key];
-  } else if (fallback && fallback[key]) {
-    term = fallback[key];
-  } else {
-    console.error(`No translation found for: ${key}`);
-    return key;
-  }
-
-  if (typeof term === 'function') {
-    return term(...args) as string;
-  }
-
-  return term;
-}
-
-//
-// Formats a date using the specified locale.
-//
-export function date(lang: string, dateToFormat: Date | string, options?: Intl.DateTimeFormatOptions) {
-  dateToFormat = new Date(dateToFormat);
-  return new Intl.DateTimeFormat(lang, options).format(dateToFormat);
-}
-
-//
-// Formats a number using the specified locale.
-//
-export function number(lang: string, numberToFormat: number | string, options?: Intl.NumberFormatOptions) {
-  numberToFormat = Number(numberToFormat);
-  return isNaN(numberToFormat) ? '' : new Intl.NumberFormat(lang, options).format(numberToFormat);
-}
-
-//
-// Formats a relative date using the specified locale.
-//
-export function relativeTime(
-  lang: string,
-  value: number,
-  unit: Intl.RelativeTimeFormatUnit,
-  options?: Intl.RelativeTimeFormatOptions
-) {
-  return new Intl.RelativeTimeFormat(lang, options).format(value, unit);
 }
 
 //
@@ -130,7 +81,9 @@ export function update() {
 //  ${this.localize.date('2021-12-03')}
 //  ${this.localize.number(1000000)}
 //
-export class LocalizeController implements ReactiveController {
+export class LocalizeController<UserTranslation extends Translation = DefaultTranslation>
+  implements ReactiveController
+{
   host: ReactiveControllerHost & HTMLElement;
 
   constructor(host: ReactiveControllerHost & HTMLElement) {
@@ -162,23 +115,46 @@ export class LocalizeController implements ReactiveController {
     return `${this.host.lang || documentLanguage}`.toLowerCase();
   }
 
-  term<K extends keyof Translation>(key: K, ...args: FunctionParams<Translation[K]>) {
-    /** Outputs a localized term. */
-    return term(this.host.lang || documentLanguage, key, ...args);
+  term<K extends keyof UserTranslation>(key: K, ...args: FunctionParams<UserTranslation[K]>) {
+    const code = this.lang().toLowerCase().slice(0, 2); // e.g. en
+    const regionCode = this.lang().length > 2 ? this.lang().toLowerCase() : ''; // e.g. en-gb
+    const primary = <UserTranslation>translations.get(regionCode);
+    const secondary = <UserTranslation>translations.get(code);
+    let term: any;
+
+    // Look for a matching term using regionCode, code, then the fallback
+    if (primary && primary[key]) {
+      term = primary[key];
+    } else if (secondary && secondary[key]) {
+      term = secondary[key];
+    } else if (fallback && fallback[key as keyof Translation]) {
+      term = fallback[key as keyof Translation];
+    } else {
+      console.error(`No translation found for: ${String(key)}`);
+      return key;
+    }
+
+    if (typeof term === 'function') {
+      return term(...args) as string;
+    }
+
+    return term;
   }
 
   /** Outputs a localized date in the specified format. */
   date(dateToFormat: Date | string, options?: Intl.DateTimeFormatOptions) {
-    return date(this.host.lang || documentLanguage, dateToFormat, options);
+    dateToFormat = new Date(dateToFormat);
+    return new Intl.DateTimeFormat(this.lang(), options).format(dateToFormat);
   }
 
   /** Outputs a localized number in the specified format. */
   number(numberToFormat: number | string, options?: Intl.NumberFormatOptions) {
-    return number(this.host.lang || documentLanguage, numberToFormat, options);
+    numberToFormat = Number(numberToFormat);
+    return isNaN(numberToFormat) ? '' : new Intl.NumberFormat(this.lang(), options).format(numberToFormat);
   }
 
   /** Outputs a localized time in relative format. */
   relativeTime(value: number, unit: Intl.RelativeTimeFormatUnit, options?: Intl.RelativeTimeFormatOptions) {
-    return relativeTime(this.host.lang || documentLanguage, value, unit, options);
+    return new Intl.RelativeTimeFormat(this.lang(), options).format(value, unit);
   }
 }

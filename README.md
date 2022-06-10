@@ -1,8 +1,8 @@
 # Shoelace: Localize
 
-This zero-dependency micro library does not aim to replicate a full-blown localization tool. For that, you should use something like [i18next](https://www.i18next.com/). What this library _does_ do is provide a lightweight, framework-agnostic mechanism for sharing and applying translations across one or more custom elements in a component library.
+This zero-dependency micro library does not aim to replicate a full-blown localization tool. For that, you should use something like [i18next](https://www.i18next.com/). What this library _does_ do is provide a lightweight, [Reactive Controller](https://lit.dev/docs/composition/controllers/) for sharing and applying translations across one or more custom elements in a component library.
 
-Included are methods for translating terms, dates, currencies, and numbers and a [Reactive Controller](https://lit.dev/docs/composition/controllers/) that can be used as a mixin in Lit and other supportive component authoring libraries.
+Reactive Controllers are supported by Lit 2 out of the box, but they're designed to be generic so other libraries can elect to support them either natively or through an adapter. If you're favorite custom element authoring library doesn't support Reactive Controllers yet, consider asking the maintainers to add support for them!
 
 ## Overview
 
@@ -11,7 +11,7 @@ Here's an example of how this library can be used to create a localized custom e
 ```ts
 import { LocalizeController, registerTranslation } from '@shoelace-style/localize';
 
-// Translations can also be loaded outside of the component and/or on the fly using dynamic imports
+// Note: translations can also be lazy loaded (see "Registering Translations" below)
 import en from '../translations/en';
 import es from '../translations/es';
 
@@ -46,9 +46,10 @@ Changes to `<html lang>` will trigger an update to all localized components auto
 It's not uncommon for a custom element to require localization, but implementing it at the component level is challenging. For example, how should we provide a translation for this close button that exists in a custom element's shadow root?
 
 ```html
-<button type="button" aria-label="Close">
-  <svg>...</svg>
-</button>
+#shadow-root
+  <button type="button" aria-label="Close">
+    <svg>...</svg>
+  </button>
 ```
 
 Typically, custom element authors dance around the problem by exposing attributes or properties for such purposes.
@@ -81,6 +82,8 @@ This library provides a set of tools to localize dates, currencies, numbers, and
 
 By design, `lang` attributes on ancestor elements are ignored. This is for performance reasons, as there isn't an efficient way to detect the "current language" of an arbitrary element. I consider this a gap in the platform and [I've proposed properties](https://github.com/whatwg/html/issues/7039) to make this lookup less expensive.
 
+Fortunately, the majority of use cases appear to favor a single language per page. However, multiple languages per page are also supported, but you'll need to explicitly set the `lang` attribute on all components whose language differs from the one set in `<html lang>`.
+
 ## Usage
 
 First, install the library.
@@ -112,10 +115,10 @@ const translation: Translation = {
   upload: 'Upload',
 
   // Terms with placeholders
-  greet_user: (name: string) => `Hello, ${name}!`,
+  greetUser: (name: string) => `Hello, ${name}!`,
 
   // Plurals
-  num_files_selected: (count: number) => {
+  numFilesSelected: (count: number) => {
     if (count === 0) return 'No files selected';
     if (count === 1) return '1 file selected';
     return `${count} files selected`;
@@ -162,7 +165,7 @@ async function changeLanguage(lang) {
 
 ### Localizing Components
 
-You can use the `LocalizeController` with any library that supports [Lit's Reactive Controller pattern](https://lit.dev/docs/composition/controllers/). In [Lit](https://lit.dev/), a localized custom element will look something like this.
+You can use the `LocalizeController` with any library that supports [Lit's Reactive Controller pattern](https://lit.dev/docs/composition/controllers/). In Lit, a localized custom element will look something like this.
 
 ```ts
 import { LitElement } from 'lit';
@@ -173,18 +176,22 @@ import { LocalizeController } from '@shoelace-style/localize/dist/lit.js';
 export class MyElement extends LitElement {
   private localize = new LocalizeController(this);
 
+  // Make sure to define `lang` so the component will respond to changes to its own lang attribute
   @property() lang: string;
 
   render() {
     return html`
-      <!-- Term -->
+      <!-- Terms -->
       ${this.localize.term('hello')}
 
-      <!-- Date -->
+      <!-- Dates -->
       ${this.localize.date('2021-09-15 14:00:00 ET'), { month: 'long', day: 'numeric', year: 'numeric' }}
 
-      <!-- Number/currency -->
+      <!-- Numbers/currency -->
       ${this.localize.number(1000, { style: 'currency', currency: 'USD'})}
+
+      <!-- Determining language -->
+      ${this.localize.lang()}
 
       <!-- Determining directionality, e.g. 'ltr' or 'rtl' -->
       ${this.localize.dir()}
@@ -193,20 +200,42 @@ export class MyElement extends LitElement {
 }
 ```
 
+## Typed Translations and Arguments
+
+Because translations are defined by the user, there's no way for TypeScript to automatically know about the terms you've defined. This means you won't get strongly typed arguments when calling `this.localize.term()`. However, you can solve this by extending `Translation` and `LocalizeController`.
+
+In a separate file, e.g. `my-localize.ts`, add the following code.
+
+```ts
+import { LocalizeController as DefaultLocalizeController } from '@shoelace-style/localize';
+
+// Extend the default controller with your custom translation
+export class LocalizeController extends DefaultLocalizeController<MyTranslation> {}
+
+// Export `registerTranslation` so you can import everything from this file
+export { registerTranslation } from '@shoelace-style/localize';
+
+// Define your translation terms here
+export interface MyTranslation extends Translation {
+  myTerm: string;
+  myOtherTerm: string;
+  myTermWithArgs: (count: string) => string;
+}
+```
+
+Now you can import `MyLocalizeController` and get strongly typed translations when you use `this.localize.term()`!
+
 ## Advantages
 
+- Zero dependencies
 - Extremely lightweight
-  - Zero dependencies
-	- Version 2.1 measures 726 bytes (yes, _bytes_) after minify + gzip
-- Uses existing platform features
 - Supports simple terms, plurals, and complex translations
-	- Fun fact: some languages have [six plural forms](https://lingohub.com/blog/2019/02/pluralization) and this will support that
-- Supports dates, numbers, and currencies
+	- Fun fact: some languages have [six plural forms](https://lingohub.com/blog/2019/02/pluralization) and this utility supports that
+- Supports dates, numbers, and currencies using built-in [`Intl` APIs](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl)
 - Good DX for custom element authors and consumers
   - Intuitive API for custom element authors
   - Consumers only need to load the translations they want and set the `lang` attribute
 - Translations can be loaded up front or on demand
-- Translations can be created by consumers without having to wait for them to get accepted upstream
 
 ## Disadvantages
 

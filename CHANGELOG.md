@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.0
+
+- 🚨BREAKING: Removed top level `term()`, `date()`, `number()`, and `relativeTime()` functions
+- Refactored `LocalizeController.term()` to allow strong typings by extending the controller and default translation (see "Typed Translations and Arguments" in the readme for details)
+
 ## 2.2.1
 
 - Fixed a bug that prevented updates from happening when `<html dir>` changed
