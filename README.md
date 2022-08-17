@@ -176,7 +176,8 @@ import { LocalizeController } from '@shoelace-style/localize/dist/lit.js';
 export class MyElement extends LitElement {
   private localize = new LocalizeController(this);
 
-  // Make sure to define `lang` so the component will respond to changes to its own lang attribute
+  // Make sure to make `dir` and `lang` reactive so the component will respond to changes to its own attributes
+  @property() dir: string;
   @property() lang: string;
 
   render() {
