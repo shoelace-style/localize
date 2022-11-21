@@ -116,10 +116,11 @@ export class LocalizeController<UserTranslation extends Translation = DefaultTra
   }
 
   term<K extends keyof UserTranslation>(key: K, ...args: FunctionParams<UserTranslation[K]>) {
-    const code = this.lang().toLowerCase().slice(0, 2); // e.g. en
-    const regionCode = this.lang().length > 2 ? this.lang().toLowerCase() : ''; // e.g. en-gb
-    const primary = <UserTranslation>translations.get(regionCode);
-    const secondary = <UserTranslation>translations.get(code);
+    const locale = new Intl.Locale(this.lang());
+    const language = locale?.language.toLowerCase();
+    const region = locale?.region?.toLowerCase() ?? '';
+    const primary = <UserTranslation>translations.get(region);
+    const secondary = <UserTranslation>translations.get(language);
     let term: any;
 
     // Look for a matching term using regionCode, code, then the fallback

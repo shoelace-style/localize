@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.2
+
+- Fixed a parsing bug in extended language codes [#16](https://github.com/shoelace-style/localize/issues/16)
+- Updated TypeScript to 4.8.4
+
+## 3.0.1
+
+- Fixed module paths in `package.json`
+
 ## 3.0.0
 
 - 🚨BREAKING: Removed top level `term()`, `date()`, `number()`, and `relativeTime()` functions
