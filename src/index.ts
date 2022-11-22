@@ -119,7 +119,7 @@ export class LocalizeController<UserTranslation extends Translation = DefaultTra
     const locale = new Intl.Locale(this.lang());
     const language = locale?.language.toLowerCase();
     const region = locale?.region?.toLowerCase() ?? '';
-    const primary = <UserTranslation>translations.get(region);
+    const primary = <UserTranslation>translations.get(`${language}-${region}`);
     const secondary = <UserTranslation>translations.get(language);
     let term: any;
 

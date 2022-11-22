@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.3
+
+- Fixed a bug where regional locales stopped working
+
 ## 3.0.2
 
 - Fixed a parsing bug in extended language codes [#16](https://github.com/shoelace-style/localize/issues/16)
