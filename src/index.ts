@@ -115,7 +115,7 @@ export class LocalizeController<UserTranslation extends Translation = DefaultTra
     return `${this.host.lang || documentLanguage}`.toLowerCase();
   }
 
-  term<K extends keyof UserTranslation>(key: K, ...args: FunctionParams<UserTranslation[K]>) {
+  term<K extends keyof UserTranslation>(key: K, ...args: FunctionParams<UserTranslation[K]>): string {
     const locale = new Intl.Locale(this.lang());
     const language = locale?.language.toLowerCase();
     const region = locale?.region?.toLowerCase() ?? '';
@@ -132,7 +132,7 @@ export class LocalizeController<UserTranslation extends Translation = DefaultTra
       term = fallback[key as keyof Translation];
     } else {
       console.error(`No translation found for: ${String(key)}`);
-      return key;
+      return String(key);
     }
 
     if (typeof term === 'function') {
@@ -143,19 +143,19 @@ export class LocalizeController<UserTranslation extends Translation = DefaultTra
   }
 
   /** Outputs a localized date in the specified format. */
-  date(dateToFormat: Date | string, options?: Intl.DateTimeFormatOptions) {
+  date(dateToFormat: Date | string, options?: Intl.DateTimeFormatOptions): string {
     dateToFormat = new Date(dateToFormat);
     return new Intl.DateTimeFormat(this.lang(), options).format(dateToFormat);
   }
 
   /** Outputs a localized number in the specified format. */
-  number(numberToFormat: number | string, options?: Intl.NumberFormatOptions) {
+  number(numberToFormat: number | string, options?: Intl.NumberFormatOptions): string {
     numberToFormat = Number(numberToFormat);
     return isNaN(numberToFormat) ? '' : new Intl.NumberFormat(this.lang(), options).format(numberToFormat);
   }
 
   /** Outputs a localized time in relative format. */
-  relativeTime(value: number, unit: Intl.RelativeTimeFormatUnit, options?: Intl.RelativeTimeFormatOptions) {
+  relativeTime(value: number, unit: Intl.RelativeTimeFormatUnit, options?: Intl.RelativeTimeFormatOptions): string {
     return new Intl.RelativeTimeFormat(this.lang(), options).format(value, unit);
   }
 }

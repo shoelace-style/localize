@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.4
+
+- Ensure return values of translation functions are always a string
+
 ## 3.0.3
 
 - Fixed a bug where regional locales stopped working
