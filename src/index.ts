@@ -12,6 +12,11 @@ export interface DefaultTranslation extends Translation {
   [key: string]: any;
 }
 
+export interface ExistsOptions {
+  lang: string;
+  includeFallback: boolean;
+}
+
 const connectedElements = new Set<HTMLElement>();
 const documentElementObserver = new MutationObserver(update);
 const translations: Map<string, Translation> = new Map();
@@ -25,9 +30,7 @@ documentElementObserver.observe(document.documentElement, {
   attributeFilter: ['dir', 'lang']
 });
 
-//
-// Registers one or more translations
-//
+/** Registers one or more translations */
 export function registerTranslation(...translation: Translation[]) {
   translation.map(t => {
     const code = t.$code.toLowerCase();
@@ -48,9 +51,7 @@ export function registerTranslation(...translation: Translation[]) {
   update();
 }
 
-//
-// Updates all localized elements that are currently connected
-//
+/** Updates all localized elements that are currently connected */
 export function update() {
   documentDirection = document.documentElement.dir || 'ltr';
   documentLanguage = document.documentElement.lang || navigator.language;
@@ -62,25 +63,25 @@ export function update() {
   });
 }
 
-//
-// Reactive controller
-//
-// To use this controller, import the class and instantiate it in a custom element constructor:
-//
-//  private localize = new LocalizeController(this);
-//
-// This will add the element to the set and make it respond to changes to <html dir|lang> automatically. To make it
-// respond to changes to its own dir|lang properties, make it a property:
-//
-//  @property() dir: string;
-//  @property() lang: string;
-//
-// To use a translation method, call it like this:
-//
-//  ${this.localize.term('term_key_here')}
-//  ${this.localize.date('2021-12-03')}
-//  ${this.localize.number(1000000)}
-//
+/**
+ * Localize Reactive Controller for components built with Lit
+ *
+ * To use this controller, import the class and instantiate it in a custom element constructor:
+ *
+ * private localize = new LocalizeController(this);
+ *
+ * This will add the element to the set and make it respond to changes to <html dir|lang> automatically. To make it
+ * respond to changes to its own dir|lang properties, make it a property:
+ *
+ *   @property() dir: string;
+ *   @property() lang: string;
+ *
+ * To use a translation method, call it like this:
+ *
+ *   ${this.localize.term('term_key_here')}
+ *   ${this.localize.date('2021-12-03')}
+ *   ${this.localize.number(1000000)}
+ */
 export class LocalizeController<UserTranslation extends Translation = DefaultTranslation>
   implements ReactiveController
 {
@@ -115,12 +116,39 @@ export class LocalizeController<UserTranslation extends Translation = DefaultTra
     return `${this.host.lang || documentLanguage}`.toLowerCase();
   }
 
-  term<K extends keyof UserTranslation>(key: K, ...args: FunctionParams<UserTranslation[K]>): string {
-    const locale = new Intl.Locale(this.lang());
+  private getTranslationData(lang: string) {
+    const locale = new Intl.Locale(lang);
     const language = locale?.language.toLowerCase();
     const region = locale?.region?.toLowerCase() ?? '';
     const primary = <UserTranslation>translations.get(`${language}-${region}`);
     const secondary = <UserTranslation>translations.get(language);
+
+    return { locale, language, region, primary, secondary };
+  }
+
+  /** Determines if the specified term exists, optionally checking the fallback translation. */
+  exists<K extends keyof UserTranslation>(key: K, options: Partial<ExistsOptions>): boolean {
+    const { primary, secondary } = this.getTranslationData(options.lang ?? this.lang());
+
+    options = {
+      includeFallback: false,
+      ...options
+    };
+
+    if (
+      (primary && primary[key]) ||
+      (secondary && secondary[key]) ||
+      (options.includeFallback && fallback && fallback[key as keyof Translation])
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /** Outputs a translated term. */
+  term<K extends keyof UserTranslation>(key: K, ...args: FunctionParams<UserTranslation[K]>): string {
+    const { primary, secondary } = this.getTranslationData(this.lang());
     let term: any;
 
     // Look for a matching term using regionCode, code, then the fallback

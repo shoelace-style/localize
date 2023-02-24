@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.0
+
+- Added `exists()` method to determine if a term and/or a fallback term exists [#17](https://github.com/shoelace-style/localize/issues/17)
+
 ## 3.0.4
 
 - Ensure return values of translation functions are always a string
