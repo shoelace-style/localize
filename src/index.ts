@@ -20,8 +20,8 @@ export interface ExistsOptions {
 const connectedElements = new Set<HTMLElement>();
 const documentElementObserver = new MutationObserver(update);
 const translations: Map<string, Translation> = new Map();
-let documentDirection = document.documentElement.dir || 'ltr';
-let documentLanguage = document.documentElement.lang || navigator.language;
+let documentDirection = document.documentElement && document.documentElement.dir || 'ltr';
+let documentLanguage = document.documentElement && document.documentElement.lang || (globalThis.navigator && navigator.language || 'en');
 let fallback: Translation;
 
 // Watch for changes on <html lang>
@@ -53,8 +53,8 @@ export function registerTranslation(...translation: Translation[]) {
 
 /** Updates all localized elements that are currently connected */
 export function update() {
-  documentDirection = document.documentElement.dir || 'ltr';
-  documentLanguage = document.documentElement.lang || navigator.language;
+  documentDirection = document.documentElement && document.documentElement.dir || 'ltr';
+  documentLanguage = document.documentElement && document.documentElement.lang || (globalThis.navigator && navigator.language || 'en');
 
   [...connectedElements.keys()].map((el: LitElement) => {
     if (typeof el.requestUpdate === 'function') {
