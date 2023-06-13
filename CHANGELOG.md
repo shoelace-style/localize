@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.1
+
+- Upgraded TypeScript to 5.1.3
+
 ## 3.1.0
 
 - Added `exists()` method to determine if a term and/or a fallback term exists [#17](https://github.com/shoelace-style/localize/issues/17)
