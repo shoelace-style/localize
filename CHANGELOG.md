@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.2
+
+- Fixed a bug that caused underscores in locale identifiers to throw a `RangeError`
+
 ## 3.1.1
 
 - Upgraded TypeScript to 5.1.3

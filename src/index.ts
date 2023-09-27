@@ -117,7 +117,9 @@ export class LocalizeController<UserTranslation extends Translation = DefaultTra
   }
 
   private getTranslationData(lang: string) {
-    const locale = new Intl.Locale(lang);
+    // Convert "en_US" to "en-US". Note that both underscores and dashes are allowed per spec, but underscores result in
+    // a RangeError by the call to `new Intl.Locale()`. See: https://unicode.org/reports/tr35/#unicode-locale-identifier
+    const locale = new Intl.Locale(lang.replace(/_/g, '-'));
     const language = locale?.language.toLowerCase();
     const region = locale?.region?.toLowerCase() ?? '';
     const primary = <UserTranslation>translations.get(`${language}-${region}`);
