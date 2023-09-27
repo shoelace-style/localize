@@ -1,6 +1,6 @@
 {
   "name": "@shoelace-style/localize",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "A micro library for localizing custom elements using Lit's Reactive Controller model.",
   "main": "dist/index.js",
   "module": "dist/index.js",
