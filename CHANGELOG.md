@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.0
+
+- Added support for SSR environments [#25](https://github.com/shoelace-style/localize/pull/25/)
+
 ## 3.1.2
 
 - Fixed a bug that caused underscores in locale identifiers to throw a `RangeError`
