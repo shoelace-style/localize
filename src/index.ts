@@ -18,17 +18,30 @@ export interface ExistsOptions {
 }
 
 const connectedElements = new Set<HTMLElement>();
-const documentElementObserver = new MutationObserver(update);
 const translations: Map<string, Translation> = new Map();
-let documentDirection = document.documentElement.dir || 'ltr';
-let documentLanguage = document.documentElement.lang || navigator.language;
+
 let fallback: Translation;
 
-// Watch for changes on <html lang>
-documentElementObserver.observe(document.documentElement, {
-  attributes: true,
-  attributeFilter: ['dir', 'lang']
-});
+
+// TODO: We need some way for users to be able to set these on the server.
+let documentDirection = 'ltr'
+
+// Fallback for server.
+let documentLanguage = 'en'
+
+const isClient = (typeof MutationObserver !== "undefined" && typeof document !== "undefined" && typeof document.documentElement !== "undefined")
+
+if (isClient) {
+  const documentElementObserver = new MutationObserver(update);
+  documentDirection = document.documentElement.dir || 'ltr';
+  documentLanguage = document.documentElement.lang || navigator.language;
+
+  // Watch for changes on <html lang>
+  documentElementObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['dir', 'lang']
+  });
+}
 
 /** Registers one or more translations */
 export function registerTranslation(...translation: Translation[]) {
@@ -53,8 +66,10 @@ export function registerTranslation(...translation: Translation[]) {
 
 /** Updates all localized elements that are currently connected */
 export function update() {
-  documentDirection = document.documentElement.dir || 'ltr';
-  documentLanguage = document.documentElement.lang || navigator.language;
+  if (isClient) {
+    documentDirection = document.documentElement.dir || 'ltr';
+    documentLanguage = document.documentElement.lang || navigator.language;
+  }
 
   [...connectedElements.keys()].map((el: LitElement) => {
     if (typeof el.requestUpdate === 'function') {
