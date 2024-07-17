@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.1
+
+- Fixed a bug where the maintainer forgot to merge the PR before publishing
+
 ## 3.2.0
 
 - Added support for SSR environments [#25](https://github.com/shoelace-style/localize/pull/25/)
