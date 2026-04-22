@@ -3,6 +3,7 @@
 ## 3.2.2
 
 - Fixed a bug where malformed `<html lang>` values caused `Intl.Locale` to throw a `RangeError`. The controller now falls through to the fallback translation instead.
+- Fixed a type error in `update()` where connected elements were incorrectly annotated as `LitElement`
 
 ## 3.2.1
 
