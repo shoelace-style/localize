@@ -22,14 +22,16 @@ const translations: Map<string, Translation> = new Map();
 
 let fallback: Translation;
 
-
 // TODO: We need some way for users to be able to set these on the server.
-let documentDirection = 'ltr'
+let documentDirection = 'ltr';
 
 // Fallback for server.
-let documentLanguage = 'en'
+let documentLanguage = 'en';
 
-const isClient = (typeof MutationObserver !== "undefined" && typeof document !== "undefined" && typeof document.documentElement !== "undefined")
+const isClient =
+  typeof MutationObserver !== 'undefined' &&
+  typeof document !== 'undefined' &&
+  typeof document.documentElement !== 'undefined';
 
 if (isClient) {
   const documentElementObserver = new MutationObserver(update);
@@ -97,9 +99,9 @@ export function update() {
  *   ${this.localize.date('2021-12-03')}
  *   ${this.localize.number(1000000)}
  */
-export class LocalizeController<UserTranslation extends Translation = DefaultTranslation>
-  implements ReactiveController
-{
+export class LocalizeController<
+  UserTranslation extends Translation = DefaultTranslation
+> implements ReactiveController {
   host: ReactiveControllerHost & HTMLElement;
 
   constructor(host: ReactiveControllerHost & HTMLElement) {
@@ -132,11 +134,21 @@ export class LocalizeController<UserTranslation extends Translation = DefaultTra
   }
 
   private getTranslationData(lang: string) {
+    //
     // Convert "en_US" to "en-US". Note that both underscores and dashes are allowed per spec, but underscores result in
     // a RangeError by the call to `new Intl.Locale()`. See: https://unicode.org/reports/tr35/#unicode-locale-identifier
-    const locale = new Intl.Locale(lang.replace(/_/g, '-'));
-    const language = locale?.language.toLowerCase();
-    const region = locale?.region?.toLowerCase() ?? '';
+    //
+    // Some environments (such as Chrome's built-in page translation) set `<html lang>` to abnormal values, e.g.
+    // `en-x-mtfrom-nb`. This try/catch guards against this so we fall through to the fallback translation.
+    //
+    let locale: Intl.Locale | undefined;
+    try {
+      locale = new Intl.Locale(lang.replace(/_/g, '-'));
+    } catch {
+      return { locale: undefined, language: '', region: '', primary: undefined, secondary: undefined };
+    }
+    const language = locale.language.toLowerCase();
+    const region = locale.region?.toLowerCase() ?? '';
     const primary = <UserTranslation>translations.get(`${language}-${region}`);
     const secondary = <UserTranslation>translations.get(language);
 

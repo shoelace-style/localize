@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.2
+
+- Fixed a bug where malformed `<html lang>` values caused `Intl.Locale` to throw a `RangeError`. The controller now falls through to the fallback translation instead.
+
 ## 3.2.1
 
 - Fixed a bug where the maintainer forgot to merge the PR before publishing
