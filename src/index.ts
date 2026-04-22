@@ -73,9 +73,9 @@ export function update() {
     documentLanguage = document.documentElement.lang || navigator.language;
   }
 
-  [...connectedElements.keys()].map((el: LitElement) => {
-    if (typeof el.requestUpdate === 'function') {
-      el.requestUpdate();
+  [...connectedElements.keys()].map(el => {
+    if (typeof (el as Partial<LitElement>).requestUpdate === 'function') {
+      (el as LitElement).requestUpdate();
     }
   });
 }
