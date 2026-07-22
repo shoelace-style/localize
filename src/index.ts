@@ -127,10 +127,27 @@ export class LocalizeController<
 
   /**
    * Gets the host element's language as determined by the `lang` attribute. The return value is transformed to
-   * lowercase.
+   * lowercase. If the resolved value isn't a valid language tag, the fallback translation's language is returned
+   * instead so it can be passed safely to the `Intl` APIs.
    */
   lang() {
-    return `${this.host.lang || documentLanguage}`.toLowerCase();
+    //
+    // Convert "en_US" to "en-US". Note that both underscores and dashes are allowed per spec, but underscores result in
+    // a RangeError in the Intl APIs. See: https://unicode.org/reports/tr35/#unicode-locale-identifier
+    //
+    const lang = `${this.host.lang || documentLanguage}`.toLowerCase().replace(/_/g, '-');
+
+    //
+    // Some environments set `<html lang>` to an invalid language tag at runtime, e.g. Chrome Translate's "Detect
+    // language" sets it to `auto`. Passing an invalid tag to `Intl.NumberFormat` et al throws a RangeError, so we fall
+    // back to the fallback translation's language when the tag is invalid.
+    //
+    try {
+      new Intl.Locale(lang);
+      return lang;
+    } catch {
+      return fallback ? fallback.$code.toLowerCase() : 'en';
+    }
   }
 
   private getTranslationData(lang: string) {

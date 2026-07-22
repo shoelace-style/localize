@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.2.3
+
+- Fixed a bug where invalid language tags, e.g. `auto` as set by Chrome Translate's "Detect language" feature, caused `date()`, `number()`, and `relativeTime()` to throw a `RangeError`
+- Fixed a bug where underscores in locale identifiers, e.g. `en_US`, caused `date()`, `number()`, and `relativeTime()` to throw a `RangeError`
+
 ## 3.2.2
 
 - Fixed a bug where malformed `<html lang>` values caused `Intl.Locale` to throw a `RangeError`. The controller now falls through to the fallback translation instead.
